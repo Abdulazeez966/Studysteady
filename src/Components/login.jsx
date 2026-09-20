@@ -1,0 +1,77 @@
+import { useState } from "react";
+import "../App.css";
+
+export default function Login({ onSubmit = () => {}, onNavigateSignup = () => {} }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [errors, setErrors] = useState({});
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    const next = {};
+    if (!email.trim()) next.email = "Enter your email.";
+    if (!password) next.password = "Enter your password.";
+    setErrors(next);
+    if (Object.keys(next).length === 0) {
+      onSubmit({ email, password });
+    }
+  }
+
+  return (
+    <div className="ss-auth">
+      <div className="ss-auth-card">
+        <h1>Welcome back</h1>
+        <p className="ss-auth-card__sub">Log in to continue your journey.</p>
+
+        <form onSubmit={handleSubmit} noValidate>
+          <div className={errors.email ? "ss-field ss-field--error" : "ss-field"}>
+            <label htmlFor="login-email">Email</label>
+            <input
+              id="login-email"
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            {errors.email && <div className="ss-field__error">{errors.email}</div>}
+          </div>
+
+          <div className={errors.password ? "ss-field ss-field--error" : "ss-field"}>
+            <label htmlFor="login-password">Password</label>
+            <input
+              id="login-password"
+              type="password"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            {errors.password && <div className="ss-field__error">{errors.password}</div>}
+          </div>
+
+          <div className="ss-auth-row">
+            <a href="#forgot-password" className="ss-auth-link">
+              Forgot password?
+            </a>
+          </div>
+
+          <button type="submit" className="ss-btn-primary">
+            Log in
+          </button>
+        </form>
+
+        <p className="ss-auth-card__footer">
+          Don't have an account?{" "}
+          <a
+            href="#signup"
+            onClick={(e) => {
+              e.preventDefault();
+              onNavigateSignup();
+            }}
+          >
+            Sign up
+          </a>
+        </p>
+      </div>
+    </div>
+  );
+}

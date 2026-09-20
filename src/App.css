@@ -1,0 +1,1084 @@
+/* StudySteady — shared styles
+   Polar palette lives here as CSS variables so every component
+   (navbar, dashboard, catch-up view, etc.) pulls from one source. */
+
+:root {
+  --ss-frost: #F3F7F9;
+  --ss-glacier: #E1EBEF;
+  --ss-ink: #12242E;
+  --ss-spark: #2FBFC4;
+  --ss-stone: #7A8D96;
+  --ss-border: #D7E2E6;
+  --ss-error: #C65B5B; /* form validation only — not used for learning/progress states */
+}
+
+*{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ---------- Navbar ---------- */
+
+.ss-navbar {
+  font-family: -apple-system, "Segoe UI", sans-serif;
+  background: var(--ss-frost);
+  border-bottom: 1px solid var(--ss-border);
+}
+
+.ss-navbar__inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+}
+
+.ss-navbar__brand {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ss-ink);
+  text-decoration: none;
+  letter-spacing: -0.01em;
+}
+
+.ss-navbar__links {
+  display: none;
+  align-items: center;
+  gap: 28px;
+}
+
+.ss-navbar__link {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ss-stone);
+  text-decoration: none;
+  padding-bottom: 4px;
+  border-bottom: 2px solid transparent;
+}
+
+.ss-navbar__link--active {
+  font-weight: 600;
+  color: var(--ss-ink);
+  border-bottom-color: var(--ss-spark);
+}
+
+.ss-navbar__cta {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ss-ink);
+  background: var(--ss-spark);
+  padding: 9px 18px;
+  border-radius: 20px;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+}
+
+.ss-navbar__toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+}
+
+.ss-navbar__mobile {
+  display: none;
+  flex-direction: column;
+  background: var(--ss-glacier);
+  border-top: 1px solid var(--ss-border);
+  padding: 8px 20px 16px;
+}
+
+.ss-navbar__mobile.ss-open {
+  display: flex;
+}
+
+.ss-navbar__mobile-link {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ss-stone);
+  text-decoration: none;
+  padding: 12px 4px;
+  border-bottom: 1px solid var(--ss-border);
+}
+
+.ss-navbar__mobile-link--active {
+  font-weight: 600;
+  color: var(--ss-ink);
+}
+
+.ss-navbar__mobile-cta {
+  margin-top: 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ss-ink);
+  background: var(--ss-spark);
+  padding: 11px 18px;
+  border-radius: 20px;
+  text-decoration: none;
+  text-align: center;
+  border: none;
+  cursor: pointer;
+}
+
+@media (min-width: 768px) {
+  .ss-navbar__links {
+    display: flex;
+  }
+  .ss-navbar__toggle {
+    display: none;
+  }
+  .ss-navbar__mobile {
+    display: none !important;
+  }
+}
+
+/* ---------- Dashboard ---------- */
+
+.ss-dashboard {
+  font-family: -apple-system, "Segoe UI", sans-serif;
+  background: var(--ss-frost);
+  min-height: 100%;
+}
+
+.ss-dashboard__inner {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 28px 20px 40px;
+}
+
+.ss-dashboard__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.ss-dashboard__greeting {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--ss-ink);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.ss-dashboard__sub {
+  font-size: 13px;
+  color: var(--ss-stone);
+  margin: 2px 0 22px;
+}
+
+.ss-dashboard__course {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--ss-glacier);
+  border: 1px solid var(--ss-border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 18px;
+  text-decoration: none;
+}
+
+.ss-dashboard__course:hover {
+  border-color: var(--ss-spark);
+}
+
+.ss-dashboard__course-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.ss-dashboard__course-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.ss-dashboard__course-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--ss-stone);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ss-dashboard__course-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ss-ink);
+  margin-top: 1px;
+}
+
+.ss-dashboard__course-provider {
+  font-weight: 400;
+  color: var(--ss-stone);
+}
+
+/* Trail — literal steps on a path, used wherever progress needs to be shown */
+
+.ss-trail {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 22px;
+}
+
+.ss-trail__stone {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--ss-border);
+  flex-shrink: 0;
+}
+
+.ss-trail__stone--done {
+  background: var(--ss-spark);
+}
+
+.ss-trail__stone--today {
+  background: var(--ss-ink);
+  width: 11px;
+  height: 11px;
+  box-shadow: 0 0 0 3px rgba(18, 36, 46, 0.14);
+}
+
+.ss-trail__gap {
+  flex: 1;
+  height: 1px;
+  background: var(--ss-border);
+}
+
+/* Task card */
+
+.ss-task-card {
+  background: #ffffff;
+  border: 1px solid var(--ss-border);
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.ss-task-card__eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ss-spark);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0 0 8px;
+}
+
+.ss-task-card__title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ss-ink);
+  line-height: 1.3;
+  margin: 0 0 4px;
+}
+
+.ss-task-card__meta {
+  font-size: 12px;
+  color: var(--ss-stone);
+  margin: 0 0 18px;
+}
+
+.ss-task-row {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  outline: none;
+}
+
+.ss-task-row__label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ss-ink);
+}
+
+.ss-checkmark {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--ss-spark);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.ss-checkmark svg {
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+
+.ss-checkmark--checked {
+  background: var(--ss-spark);
+}
+
+.ss-checkmark--checked svg {
+  opacity: 1;
+}
+
+/* Stats row */
+
+.ss-stats-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid var(--ss-border);
+}
+
+.ss-stat__num {
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--ss-ink);
+  letter-spacing: -0.02em;
+}
+
+.ss-stat__label {
+  font-size: 11px;
+  color: var(--ss-stone);
+  margin-top: 2px;
+}
+
+.ss-stat--right {
+  text-align: right;
+}
+
+@media (min-width: 640px) {
+  .ss-dashboard__inner {
+    padding-top: 44px;
+  }
+  .ss-task-card {
+    padding: 26px;
+  }
+}
+
+/* ---------- Auth (Login / Signup) ---------- */
+
+.ss-auth {
+  font-family: -apple-system, "Segoe UI", sans-serif;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ss-frost);
+  padding: 24px;
+}
+
+.ss-auth-card {
+  width: 100%;
+  max-width: 380px;
+  background: #ffffff;
+  border: 1px solid var(--ss-border);
+  border-radius: 16px;
+  padding: 32px;
+}
+
+.ss-auth-card h1 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--ss-ink);
+  margin: 0 0 6px;
+  letter-spacing: -0.01em;
+}
+
+.ss-auth-card__sub {
+  font-size: 13px;
+  color: var(--ss-stone);
+  margin: 0 0 26px;
+}
+
+.ss-field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+}
+
+.ss-field label {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ss-ink);
+  margin-bottom: 6px;
+}
+
+.ss-field input {
+  font-family: inherit;
+  font-size: 14px;
+  padding: 11px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--ss-border);
+  background: var(--ss-frost);
+  color: var(--ss-ink);
+  outline: none;
+}
+
+.ss-field input::placeholder {
+  color: var(--ss-stone);
+}
+
+.ss-field input:focus {
+  border-color: var(--ss-spark);
+  box-shadow: 0 0 0 3px rgba(47, 191, 196, 0.18);
+}
+
+.ss-field--error input {
+  border-color: var(--ss-error);
+}
+
+.ss-field__error {
+  font-size: 11.5px;
+  color: var(--ss-error);
+  margin-top: 5px;
+}
+
+.ss-auth-row {
+  display: flex;
+  justify-content: flex-end;
+  margin: -8px 0 18px;
+}
+
+.ss-auth-link {
+  font-size: 12.5px;
+  color: var(--ss-stone);
+  text-decoration: none;
+}
+
+.ss-auth-link:hover {
+  color: var(--ss-ink);
+}
+
+.ss-btn-primary {
+  width: 100%;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ss-ink);
+  background: var(--ss-spark);
+  border: none;
+  border-radius: 10px;
+  padding: 13px 16px;
+  cursor: pointer;
+}
+
+.ss-btn-primary:hover {
+  filter: brightness(0.96);
+}
+
+.ss-auth-card__footer {
+  text-align: center;
+  font-size: 13px;
+  color: var(--ss-stone);
+  margin-top: 22px;
+}
+
+.ss-auth-card__footer a {
+  color: var(--ss-ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.ss-auth-card__footer a:hover {
+  color: var(--ss-spark);
+}
+
+/* ---------- Onboarding ---------- */
+
+.ss-onboarding {
+  font-family: -apple-system, "Segoe UI", sans-serif;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ss-frost);
+  padding: 24px;
+}
+
+.ss-onboarding-card {
+  width: 100%;
+  max-width: 400px;
+  background: #ffffff;
+  border: 1px solid var(--ss-border);
+  border-radius: 16px;
+  padding: 32px;
+}
+
+.ss-onboarding-card__step {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ss-spark);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0 0 10px;
+}
+
+.ss-onboarding-card h1 {
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--ss-ink);
+  margin: 0 0 6px;
+  line-height: 1.3;
+}
+
+.ss-onboarding-card__sub {
+  font-size: 13px;
+  color: var(--ss-stone);
+  margin: 0 0 24px;
+  line-height: 1.5;
+}
+
+.ss-field select {
+  font-family: inherit;
+  font-size: 14px;
+  padding: 11px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--ss-border);
+  background: var(--ss-frost);
+  color: var(--ss-ink);
+  outline: none;
+}
+
+.ss-field select:focus {
+  border-color: var(--ss-spark);
+  box-shadow: 0 0 0 3px rgba(47, 191, 196, 0.18);
+}
+
+/* ---------- App shell (navbar + routed page content) ---------- */
+
+.ss-app-shell {
+  min-height: 100vh;
+  background: var(--ss-frost);
+}
+
+.ss-app-shell__content {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+/* ---------- Shared page layout (Plan / Progress / Reminders) ---------- */
+
+.ss-page {
+  font-family: -apple-system, "Segoe UI", sans-serif;
+  padding: 28px 20px 60px;
+}
+
+.ss-page__inner {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.ss-page__section {
+  margin-bottom: 20px;
+}
+
+.ss-page-header {
+  margin-bottom: 24px;
+}
+
+.ss-page-header__eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ss-spark);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0 0 8px;
+}
+
+.ss-page-header h1 {
+  font-size: 21px;
+  font-weight: 600;
+  color: var(--ss-ink);
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  margin: 0 0 6px;
+}
+
+.ss-page-header__sub {
+  font-size: 13px;
+  color: var(--ss-stone);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.ss-empty-state {
+  font-size: 13.5px;
+  color: var(--ss-stone);
+  line-height: 1.6;
+}
+
+.ss-empty-state a {
+  color: var(--ss-ink);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.ss-inline-saved {
+  font-size: 12.5px;
+  color: var(--ss-spark);
+  font-weight: 500;
+  margin-left: 12px;
+}
+
+/* ---------- Plan (task list) ---------- */
+
+.ss-plan-list {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+}
+
+.ss-plan-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--ss-border);
+}
+
+.ss-plan-item:last-child {
+  border-bottom: none;
+}
+
+.ss-plan-item__title {
+  font-size: 13.5px;
+  color: var(--ss-ink);
+  flex: 1;
+}
+
+.ss-plan-item__title--done {
+  color: var(--ss-stone);
+  text-decoration: line-through;
+}
+
+.ss-plan-item__edit-input {
+  flex: 1;
+  font-family: inherit;
+  font-size: 13.5px;
+  padding: 7px 9px;
+  border-radius: 8px;
+  border: 1px solid var(--ss-spark);
+  background: var(--ss-frost);
+  color: var(--ss-ink);
+  outline: none;
+}
+
+.ss-plan-item__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.ss-plan-item__status {
+  font-family: inherit;
+  font-size: 11.5px;
+  padding: 5px 7px;
+  border-radius: 7px;
+  border: 1px solid var(--ss-border);
+  background: var(--ss-frost);
+  color: var(--ss-stone);
+  outline: none;
+}
+
+.ss-plan-item__link {
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ss-stone);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.ss-plan-item__link:hover {
+  color: var(--ss-ink);
+}
+
+.ss-plan-item__remove {
+  font-size: 16px;
+  line-height: 1;
+  color: var(--ss-stone);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0 2px;
+}
+
+.ss-plan-item__remove:hover {
+  color: var(--ss-error);
+}
+
+.ss-plan-add {
+  display: flex;
+  gap: 8px;
+}
+
+.ss-plan-add input {
+  flex: 1;
+  font-family: inherit;
+  font-size: 13.5px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--ss-border);
+  background: var(--ss-frost);
+  color: var(--ss-ink);
+  outline: none;
+}
+
+.ss-plan-add input:focus {
+  border-color: var(--ss-spark);
+  box-shadow: 0 0 0 3px rgba(47, 191, 196, 0.18);
+}
+
+/* ---------- Progress ---------- */
+
+.ss-stats-row--triple {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.ss-stat--center {
+  text-align: center;
+}
+
+.ss-status-tag {
+  flex-shrink: 0;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 4px 9px;
+  border-radius: 100px;
+  background: var(--ss-glacier);
+  color: var(--ss-stone);
+}
+
+.ss-status-tag--completed {
+  background: rgba(47, 191, 196, 0.16);
+  color: var(--ss-ink);
+}
+
+/* ---------- Reminders ---------- */
+
+.ss-reminders-list {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+}
+
+.ss-reminders-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--ss-border);
+}
+
+.ss-reminders-row:last-child {
+  border-bottom: none;
+}
+
+.ss-reminders-row__label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ss-ink);
+}
+
+.ss-reminders-note {
+  font-size: 11.5px;
+  color: var(--ss-stone);
+  line-height: 1.5;
+  margin: 4px 0 18px;
+}
+
+.ss-toggle {
+  width: 38px;
+  height: 22px;
+  border-radius: 100px;
+  background: var(--ss-border);
+  position: relative;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+  transition: background 0.15s;
+}
+
+.ss-toggle--on {
+  background: var(--ss-spark);
+}
+
+.ss-toggle__dot {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  transition: left 0.15s;
+}
+
+.ss-toggle--on .ss-toggle__dot {
+  left: 19px;
+}
+
+/* ---------- Buttons (shared) ---------- */
+
+.ss-btn-primary--compact {
+  width: auto;
+  display: inline-block;
+  padding: 9px 18px;
+  text-decoration: none;
+}
+
+.ss-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ss-ink);
+  background: transparent;
+  border: 1px solid var(--ss-border);
+  border-radius: 10px;
+  padding: 13px 18px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.ss-btn-secondary:hover {
+  border-color: var(--ss-stone);
+}
+
+/* ---------- Landing ---------- */
+
+.ss-landing {
+  font-family: -apple-system, "Segoe UI", sans-serif;
+  background: var(--ss-frost);
+}
+
+.ss-landing__nav {
+  border-bottom: 1px solid var(--ss-border);
+}
+
+.ss-landing__nav-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 20px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ss-landing__brand {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ss-ink);
+  letter-spacing: -0.01em;
+}
+
+.ss-landing__nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.ss-landing__hero {
+  padding: 88px 20px 64px;
+}
+
+.ss-landing__hero-inner {
+  max-width: 640px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.ss-landing__eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ss-spark);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 16px;
+}
+
+.ss-landing__title {
+  font-size: 40px;
+  font-weight: 600;
+  color: var(--ss-ink);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin: 0 0 18px;
+}
+
+.ss-landing__subtitle {
+  font-size: 16px;
+  color: var(--ss-stone);
+  line-height: 1.6;
+  margin: 0 auto 32px;
+  max-width: 520px;
+}
+
+.ss-landing__cta-row {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 48px;
+}
+
+.ss-landing__cta-row .ss-btn-primary {
+  width: auto;
+  display: inline-flex;
+  align-items: center;
+  padding: 13px 24px;
+  text-decoration: none;
+}
+
+.ss-landing__hero-trail {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  max-width: 280px;
+  margin: 0 auto;
+}
+
+.ss-landing__stats {
+  border-top: 1px solid var(--ss-border);
+  border-bottom: 1px solid var(--ss-border);
+  background: var(--ss-glacier);
+}
+
+.ss-landing__stats-inner {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 36px 20px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  text-align: center;
+}
+
+.ss-landing__stat-num {
+  font-size: 30px;
+  font-weight: 600;
+  color: var(--ss-ink);
+  letter-spacing: -0.02em;
+}
+
+.ss-landing__stat-label {
+  font-size: 12.5px;
+  color: var(--ss-stone);
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
+.ss-landing__features {
+  padding: 72px 20px;
+}
+
+.ss-landing__features-inner {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+.ss-landing__feature-card {
+  background: #ffffff;
+  border: 1px solid var(--ss-border);
+  border-radius: 14px;
+  padding: 24px;
+}
+
+.ss-landing__feature-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--ss-spark);
+  margin-bottom: 14px;
+}
+
+.ss-landing__feature-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ss-ink);
+  margin: 0 0 6px;
+}
+
+.ss-landing__feature-text {
+  font-size: 13.5px;
+  color: var(--ss-stone);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.ss-landing__cta-banner {
+  background: var(--ss-ink);
+  padding: 64px 20px;
+}
+
+.ss-landing__cta-banner-inner {
+  max-width: 480px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.ss-landing__cta-banner-inner h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 8px;
+}
+
+.ss-landing__cta-banner-inner p {
+  font-size: 14px;
+  color: var(--ss-glacier);
+  margin: 0 0 24px;
+}
+
+.ss-landing__cta-banner-inner .ss-btn-primary {
+  width: auto;
+  display: inline-flex;
+  padding: 13px 24px;
+  text-decoration: none;
+}
+
+.ss-landing__footer {
+  text-align: center;
+  padding: 28px 20px;
+  font-size: 12.5px;
+  color: var(--ss-stone);
+  border-top: 1px solid var(--ss-border);
+}
+
+@media (min-width: 640px) {
+  .ss-landing__features-inner {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 960px) {
+  .ss-landing__title {
+    font-size: 48px;
+  }
+  .ss-landing__features-inner {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
