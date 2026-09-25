@@ -13,7 +13,9 @@ export default function Signup({ onSubmit = () => {}, onNavigateLogin = () => {}
     const next = {};
     if (!fullName.trim()) next.fullName = "Enter your full name.";
     if (!email.trim()) next.email = "Enter your email.";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) next.email = "Please enter a valid email address.";
     if (!password) next.password = "Create a password.";
+    else if (password.length < 8) next.password = "Password must be at least 8 characters.";
     if (!confirmPassword) next.confirmPassword = "Confirm your password.";
     if (password && confirmPassword && password !== confirmPassword) {
       next.confirmPassword = "Passwords don't match.";
@@ -28,11 +30,11 @@ export default function Signup({ onSubmit = () => {}, onNavigateLogin = () => {}
     <div className="ss-auth">
       <div className="ss-auth-card">
         <h1>Create account</h1>
-        <p className="ss-auth-card__sub">Start your learning journey with StudySteady.</p>
+        <p className="ss-auth-card__sub">Let's get you set up in a few steps.</p>
 
         <form onSubmit={handleSubmit} noValidate>
           <div className={errors.fullName ? "ss-field ss-field--error" : "ss-field"}>
-            <label htmlFor="signup-fullname">Full name</label>
+            <label htmlFor="signup-fullname">Your name</label>
             <input
               id="signup-fullname"
               type="text"
@@ -44,11 +46,11 @@ export default function Signup({ onSubmit = () => {}, onNavigateLogin = () => {}
           </div>
 
           <div className={errors.email ? "ss-field ss-field--error" : "ss-field"}>
-            <label htmlFor="signup-email">Email</label>
+            <label htmlFor="signup-email">Email address</label>
             <input
               id="signup-email"
               type="email"
-              placeholder="you@example.com"
+              placeholder="your@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -64,7 +66,11 @@ export default function Signup({ onSubmit = () => {}, onNavigateLogin = () => {}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            {errors.password && <div className="ss-field__error">{errors.password}</div>}
+            {errors.password ? (
+              <div className="ss-field__error">{errors.password}</div>
+            ) : (
+              <div className="ss-field__hint">At least 8 characters</div>
+            )}
           </div>
 
           <div className={errors.confirmPassword ? "ss-field ss-field--error" : "ss-field"}>
@@ -76,9 +82,7 @@ export default function Signup({ onSubmit = () => {}, onNavigateLogin = () => {}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
             />
-            {errors.confirmPassword && (
-              <div className="ss-field__error">{errors.confirmPassword}</div>
-            )}
+            {errors.confirmPassword && <div className="ss-field__error">{errors.confirmPassword}</div>}
           </div>
 
           <button type="submit" className="ss-btn-primary">

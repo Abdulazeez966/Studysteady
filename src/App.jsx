@@ -7,13 +7,17 @@ import Layout from "./Components/layout";
 import Dashboard from "./Components/dashboard";
 import Plan from "./Components/plan";
 import Progress from "./Components/progress";
+import Settings from "./Components/settings";
 import Reminders from "./Components/reminders";
+import CatchupView from "./Components/catchup";
 import { UserProvider, useUser } from "./user-context";
 import "./App.css";
 
-// Each auth/onboarding component takes plain callback props (onSubmit, etc.)
-// so it stays testable on its own — these small wrappers are where routing
-// and the frontend-only user store actually get connected.
+let taskIdCounter = 0;
+function taskId() {
+  taskIdCounter += 1;
+  return `ob-task-${Date.now()}-${taskIdCounter}`;
+}
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -21,8 +25,7 @@ function LoginPage() {
   return (
     <Login
       onSubmit={({ email }) => {
-        // No backend yet — we don't actually know the user's name or
-        // history at login, so we can only guess a name from the email.
+        // No backend yet — login can only guess a name from the email.
         setUser((prev) => ({ ...prev, name: email.split("@")[0], email }));
         navigate("/dashboard");
       }}
@@ -50,63 +53,21 @@ function OnboardingPage() {
   const { setUser } = useUser();
   return (
     <Onboarding
-      onSubmit={({ goal, weeklyTime, days }) => {
-        setUser((prev) => ({ ...prev, goal, weeklyTime, days }));
+      onSubmit={({ goal, why, programme, activities, weeklyTime, days, reminderDays, startNow }) => {
+        const tasks = activities.map((title) => ({ id: taskId(), title, status: "pending" }));
+        setUser((prev) => ({
+          ...prev,
+          goal,
+          why,
+          programme,
+          weeklyTime,
+          days,
+          tasks,
+          reminderDays,
+          remindersEnabled: startNow,
+        }));
         navigate("/dashboard");
       }}
-    />
-  );
-}
-
-function DashboardPage() {
-  const { user } = useUser();
-
-  const firstName = user?.name ? user.name.split(" ")[0] : undefined;
-
-  // Real date, read straight from the browser — genuinely personalized,
-  // no backend needed, and it's always accurate for "today."
-  const todayLabel = new Date().toLocaleDateString(undefined, {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  });
-
-  const hasOnboardingData = Boolean(user?.goal);
-
-  const course = hasOnboardingData ? { title: user.goal } : undefined;
-
-  const task = hasOnboardingData
-    ? {
-        title: `Continue: ${user.goal}`,
-        meta: [user.weeklyTime && `${user.weeklyTime} this week`, user.days]
-          .filter(Boolean)
-          .join(" · "),
-      }
-    : undefined;
-
-  // A brand-new user hasn't completed anything yet — show that honestly
-  // instead of a fake head start.
-  const freshTrail = hasOnboardingData
-    ? [
-        { state: "today" },
-        { state: "upcoming" },
-        { state: "upcoming" },
-        { state: "upcoming" },
-        { state: "upcoming" },
-      ]
-    : undefined;
-
-  return (
-    <Dashboard
-      userName={firstName}
-      weekLabel={todayLabel}
-      course={course}
-      task={task}
-      trail={freshTrail}
-      progressBase={hasOnboardingData ? 0 : undefined}
-      progressAfterComplete={hasOnboardingData ? 20 : undefined}
-      streakBase={hasOnboardingData ? 0 : undefined}
-      streakAfterComplete={hasOnboardingData ? 1 : undefined}
     />
   );
 }
@@ -122,10 +83,14 @@ export default function App() {
           <Route path="/onboarding" element={<OnboardingPage />} />
 
           <Route element={<Layout />}>
-            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/plan" element={<Plan />} />
             <Route path="/progress" element={<Progress />} />
-            <Route path="/reminders" element={<Reminders />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/settings/reminders" element={<Reminders />} />
+            {/* Catch-up is contextual, not a nav tab — reached only from the
+                Dashboard's catch-up state, per the architecture doc. */}
+            <Route path="/catchup" element={<CatchupView />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -21,7 +21,7 @@ export default function Login({ onSubmit = () => {}, onNavigateSignup = () => {}
     <div className="ss-auth">
       <div className="ss-auth-card">
         <h1>Welcome back</h1>
-        <p className="ss-auth-card__sub">Log in to continue your journey.</p>
+        <p className="ss-auth-card__sub">Log in to your journey.</p>
 
         <form onSubmit={handleSubmit} noValidate>
           <div className={errors.email ? "ss-field ss-field--error" : "ss-field"}>
@@ -29,7 +29,7 @@ export default function Login({ onSubmit = () => {}, onNavigateSignup = () => {}
             <input
               id="login-email"
               type="email"
-              placeholder="you@example.com"
+              placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -41,7 +41,7 @@ export default function Login({ onSubmit = () => {}, onNavigateSignup = () => {}
             <input
               id="login-password"
               type="password"
-              placeholder="Enter your password"
+              placeholder="Enter password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
