@@ -4,6 +4,7 @@ import "../App.css";
 const TOTAL_STEPS = 6;
 
 export default function Onboarding({ onSubmit = () => {} }) {
+  const [showIntro, setShowIntro] = useState(true);
   const [step, setStep] = useState(1);
 
   const [goal, setGoal] = useState("");
@@ -13,7 +14,9 @@ export default function Onboarding({ onSubmit = () => {} }) {
   const [activityDraft, setActivityDraft] = useState("");
   const [weeklyTime, setWeeklyTime] = useState("3 hours");
   const [days, setDays] = useState("Tue / Thu / Sat");
+  const [remindersEnabled, setRemindersEnabled] = useState(true);
   const [reminderDays, setReminderDays] = useState({ Tuesday: true, Thursday: true, Saturday: true });
+  const [reminderTime, setReminderTime] = useState("Evening");
   const [error, setError] = useState("");
 
   function next() {
@@ -47,7 +50,27 @@ export default function Onboarding({ onSubmit = () => {} }) {
   }
 
   function finish(startNow) {
-    onSubmit({ goal, why, programme, activities, weeklyTime, days, reminderDays, startNow });
+    onSubmit({
+      goal, why, programme, activities, weeklyTime, days,
+      remindersEnabled: startNow ? remindersEnabled : false,
+      reminderDays, reminderTime, startNow,
+    });
+  }
+
+  if (showIntro) {
+    return (
+      <div className="ss-onboarding">
+        <div className="ss-onboarding-card">
+          <div className="ss-onboarding-intro">
+            <h1>Let's set up your plan</h1>
+            <p>A few quick steps — your goal, your activities, and how much time you've got. Takes about a minute.</p>
+            <button type="button" className="ss-btn-primary" onClick={() => setShowIntro(false)}>
+              Let's set up your plan
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const progressPct = Math.round((step / TOTAL_STEPS) * 100);
@@ -181,7 +204,25 @@ export default function Onboarding({ onSubmit = () => {} }) {
         {step === 6 && (
           <>
             <h1>Set up reminders</h1>
-            <p className="ss-onboarding-card__sub">Optional — you can turn these off any time in Settings.</p>
+            <p className="ss-onboarding-card__sub">Optional — you can change these any time in Settings.</p>
+
+            <div className="ss-reminder-toggle-card">
+              <div>
+                <h3>Enable reminders</h3>
+                <p>Get notified before your sessions</p>
+              </div>
+              <button
+                type="button"
+                className={remindersEnabled ? "ss-toggle ss-toggle--on" : "ss-toggle"}
+                role="switch"
+                aria-checked={remindersEnabled}
+                onClick={() => setRemindersEnabled((v) => !v)}
+              >
+                <span className="ss-toggle__dot" />
+              </button>
+            </div>
+
+            <p className="ss-section-label">Remind me on</p>
             <div className="ss-day-picker">
               {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day, i) => (
                 <button
@@ -190,8 +231,24 @@ export default function Onboarding({ onSubmit = () => {} }) {
                   className={reminderDays[day] ? "ss-day-picker__day--on" : ""}
                   onClick={() => setReminderDays((prev) => ({ ...prev, [day]: !prev[day] }))}
                   aria-label={day}
+                  disabled={!remindersEnabled}
                 >
                   {"MTWTFSS"[i]}
+                </button>
+              ))}
+            </div>
+
+            <p className="ss-section-label">Time of day</p>
+            <div className="ss-time-picker">
+              {["Morning", "Afternoon", "Evening"].map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  className={reminderTime === opt ? "ss-time-picker__opt--on" : ""}
+                  onClick={() => setReminderTime(opt)}
+                  disabled={!remindersEnabled}
+                >
+                  {opt}
                 </button>
               ))}
             </div>

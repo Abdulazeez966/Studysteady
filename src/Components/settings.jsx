@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useUser } from "../user-context";
 import "../App.css";
 
@@ -11,14 +11,8 @@ function Chevron() {
 }
 
 export default function Settings() {
-  const { user, setUser } = useUser();
-  const navigate = useNavigate();
+  const { user } = useUser();
   const initial = user?.name ? user.name.charAt(0).toUpperCase() : "?";
-
-  function logOut() {
-    setUser(null);
-    navigate("/");
-  }
 
   return (
     <div className="ss-page">
@@ -28,13 +22,20 @@ export default function Settings() {
         </div>
 
         <div className="ss-card ss-page__section">
-          <div className="ss-account-card">
-            <div className="ss-account-avatar">{initial}</div>
-            <div>
-              <div className="ss-account-name">{user?.name || "Your account"}</div>
-              <div className="ss-account-email">{user?.email || "—"}</div>
-            </div>
-          </div>
+          <ul className="ss-settings-list">
+            <li>
+              <Link to="/settings/account" className="ss-settings-row">
+                <div className="ss-account-card" style={{ marginBottom: 0 }}>
+                  <div className="ss-account-avatar">{initial}</div>
+                  <div>
+                    <div className="ss-account-name">{user?.name || "Your account"}</div>
+                    <div className="ss-account-email">{user?.email || "—"}</div>
+                  </div>
+                </div>
+                <Chevron />
+              </Link>
+            </li>
+          </ul>
         </div>
 
         <div className="ss-card">
@@ -49,7 +50,7 @@ export default function Settings() {
               </Link>
             </li>
             <li>
-              <Link to="/plan" className="ss-settings-row">
+              <Link to="/settings/plan" className="ss-settings-row">
                 <div>
                   <div className="ss-settings-row__title">Plan controls</div>
                   <div className="ss-settings-row__sub">Pause, adjust pace or schedule</div>
@@ -59,10 +60,6 @@ export default function Settings() {
             </li>
           </ul>
         </div>
-
-        <button type="button" className="ss-logout-btn" onClick={logOut}>
-          Log out
-        </button>
       </div>
     </div>
   );

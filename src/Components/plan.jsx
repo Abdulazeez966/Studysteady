@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { useUser } from "../user-context";
-import ProgressRing from "./progress-ring";
 import "../App.css";
 
 let idCounter = 0;
@@ -20,6 +20,7 @@ function seedTasks(goal) {
 
 const STATUS_LABELS = { pending: "Pending", in_progress: "In progress", completed: "Completed" };
 const STATUS_CYCLE = { pending: "in_progress", in_progress: "completed", completed: "pending" };
+const INACTIVITY_DAYS_THRESHOLD = 7;
 
 export default function Plan() {
   const { user, setUser } = useUser();
@@ -30,15 +31,6 @@ export default function Plan() {
   const [editingId, setEditingId] = useState(null);
   const [editValue, setEditValue] = useState("");
   const [newTask, setNewTask] = useState("");
-  const [showSettings, setShowSettings] = useState(false);
-
-  const [goal, setGoal] = useState(user?.goal ?? "");
-  const [weeklyTime, setWeeklyTime] = useState(user?.weeklyTime ?? "3 hours");
-  const [days, setDays] = useState(user?.days ?? "Tue / Thu / Sat");
-  const [settingsSaved, setSettingsSaved] = useState(false);
-
-  // Completion overlay state — shown right after a task flips to "completed"
-  const [completedOverlayTask, setCompletedOverlayTask] = useState(null);
 
   useEffect(() => {
     if (!user?.tasks) {
@@ -63,14 +55,12 @@ export default function Plan() {
   }
 
   function cycleStatus(task) {
-    const nextStatus = STATUS_CYCLE[task.status];
-    updateTasks(tasks.map((t) => (t.id === task.id ? { ...t, status: nextStatus } : t)));
-    if (nextStatus === "completed") {
-      setCompletedOverlayTask(task);
-    }
+    updateTasks(tasks.map((t) => (t.id === task.id ? { ...t, status: STATUS_CYCLE[t.status] } : t)));
   }
 
-  function startEdit(task) {
+  function startEdit(task, e) {
+    e.preventDefault();
+    e.stopPropagation();
     setEditingId(task.id);
     setEditValue(task.title);
   }
@@ -82,22 +72,17 @@ export default function Plan() {
     setEditingId(null);
   }
 
-  function saveSettings(e) {
-    e.preventDefault();
-    setUser((prev) => ({ ...prev, goal, weeklyTime, days }));
-    setSettingsSaved(true);
-  }
-
-  // For the completion overlay: what's the task right after the one just completed?
-  const overlayIndex = completedOverlayTask ? tasks.findIndex((t) => t.id === completedOverlayTask.id) : -1;
-  const upNext = overlayIndex >= 0 ? tasks.slice(overlayIndex + 1).find((t) => t.status !== "completed") : null;
-  const completedSoFar = tasks.filter((t) => t.status === "completed").length;
+  const daysSinceActive = user?.lastActiveAt
+    ? (Date.now() - new Date(user.lastActiveAt).getTime()) / 86400000
+    : 0;
+  const showMissed = daysSinceActive >= INACTIVITY_DAYS_THRESHOLD && total > completed;
+  const missedTasks = tasks.filter((t) => t.status !== "completed");
 
   return (
     <div className="ss-page">
       <div className="ss-page__inner">
         <div className="ss-page-header">
-          <p className="ss-page-header__eyebrow ss-eyebrow ss-eyebrow--teal">Your plan</p>
+          <p className="ss-eyebrow ss-eyebrow--teal" style={{ marginBottom: 6 }}>Your plan</p>
         </div>
 
         <div className="ss-plan-goal-row">
@@ -110,6 +95,41 @@ export default function Plan() {
           {user?.weeklyTime ? `${user.weeklyTime}` : ""}
           {user?.days ? ` · ${user.days}` : ""}
         </p>
+
+        {user?.paused && (
+          <div className="ss-paused-banner">
+            <p>Your plan is paused{user.pauseReturnDate ? ` until ${user.pauseReturnDate}` : ""}.</p>
+            <button
+              type="button"
+              className="ss-btn-secondary"
+              onClick={() => setUser((prev) => ({ ...prev, paused: false }))}
+            >
+              Resume now
+            </button>
+          </div>
+        )}
+
+        {showMissed && (
+          <div className="ss-card ss-page__section" style={{ borderColor: "var(--ss-attention)" }}>
+            <p className="ss-plan-section-title">Missed activities</p>
+            <ul className="ss-waiting-list">
+              {missedTasks.slice(0, 3).map((t) => (
+                <li key={t.id}>
+                  <span>{t.title}</span>
+                  <span className="ss-waiting-list__meta">{STATUS_LABELS[t.status]}</span>
+                </li>
+              ))}
+            </ul>
+            {missedTasks.length > 3 && (
+              <p style={{ fontSize: 12, color: "var(--ss-stone)", marginTop: 8 }}>
+                +{missedTasks.length - 3} more
+              </p>
+            )}
+            <Link to="/catchup" className="ss-btn-primary" style={{ marginTop: 14, textDecoration: "none" }}>
+              See catch-up plan
+            </Link>
+          </div>
+        )}
 
         <div className="ss-card ss-page__section">
           <p className="ss-plan-section-title">All activities</p>
@@ -142,9 +162,13 @@ export default function Plan() {
                       autoFocus
                     />
                   ) : (
-                    <span className={task.status === "completed" ? "ss-plan-item__title ss-plan-item__title--done" : "ss-plan-item__title"}>
+                    <Link
+                      to={`/plan/${task.id}`}
+                      className={task.status === "completed" ? "ss-plan-item__title ss-plan-item__title--done" : "ss-plan-item__title"}
+                      style={{ textDecoration: "none" }}
+                    >
                       {task.title}
-                    </span>
+                    </Link>
                   )}
 
                   <span className="ss-plan-item__status-label">{STATUS_LABELS[task.status]}</span>
@@ -155,7 +179,7 @@ export default function Plan() {
                         Save
                       </button>
                     ) : (
-                      <button type="button" className="ss-plan-item__link" onClick={() => startEdit(task)}>
+                      <button type="button" className="ss-plan-item__link" onClick={(e) => startEdit(task, e)}>
                         Edit
                       </button>
                     )}
@@ -182,83 +206,10 @@ export default function Plan() {
           </form>
         </div>
 
-        <button type="button" className="ss-btn-secondary" style={{ width: "100%" }} onClick={() => setShowSettings((v) => !v)}>
-          {showSettings ? "Hide pause / adjust plan" : "Pause / Adjust plan"}
-        </button>
-
-        {showSettings && (
-          <div className="ss-card ss-page__section" style={{ marginTop: 14 }}>
-            <p className="ss-plan-section-title">Pause / Adjust plan</p>
-            <form onSubmit={saveSettings} noValidate>
-              <div className="ss-field">
-                <label htmlFor="plan-goal">Learning goal</label>
-                <input
-                  id="plan-goal"
-                  type="text"
-                  value={goal}
-                  onChange={(e) => { setGoal(e.target.value); setSettingsSaved(false); }}
-                  placeholder="e.g. React course on Udemy"
-                />
-              </div>
-              <div className="ss-field">
-                <label htmlFor="plan-time">Weekly time</label>
-                <select id="plan-time" value={weeklyTime} onChange={(e) => { setWeeklyTime(e.target.value); setSettingsSaved(false); }}>
-                  <option>1 hour</option>
-                  <option>3 hours</option>
-                  <option>5 hours</option>
-                  <option>10+ hours</option>
-                </select>
-              </div>
-              <div className="ss-field">
-                <label htmlFor="plan-days">Preferred days</label>
-                <select id="plan-days" value={days} onChange={(e) => { setDays(e.target.value); setSettingsSaved(false); }}>
-                  <option>Tue / Thu / Sat</option>
-                  <option>Mon / Wed / Fri</option>
-                  <option>Weekends only</option>
-                  <option>Every day</option>
-                </select>
-              </div>
-              <button type="submit" className="ss-btn-primary ss-btn-primary--compact">
-                Save changes
-              </button>
-              {settingsSaved && <span className="ss-inline-saved">Saved.</span>}
-            </form>
-          </div>
-        )}
+        <Link to="/plan/pause" className="ss-btn-secondary" style={{ width: "100%", textDecoration: "none" }}>
+          Pause / Adjust plan
+        </Link>
       </div>
-
-      {completedOverlayTask && (
-        <div className="ss-overlay" onClick={() => setCompletedOverlayTask(null)}>
-          <div className="ss-overlay__card" onClick={(e) => e.stopPropagation()}>
-            <div className="ss-overlay__check">
-              <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
-                <path d="M6 13L11 18L20 8" stroke="white" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-            <h2>Great work.</h2>
-            <p>{completedOverlayTask.title} is done.</p>
-            <div className="ss-overlay__ring-wrap">
-              <ProgressRing value={completedSoFar} max={total} size={84} strokeWidth={8} />
-            </div>
-            {upNext && (
-              <div className="ss-overlay__up-next">
-                <div className="ss-overlay__up-next-eyebrow">Up next</div>
-                <div className="ss-overlay__up-next-title">{upNext.title}</div>
-              </div>
-            )}
-            <div className="ss-overlay__actions">
-              {upNext && (
-                <button className="ss-btn-primary" onClick={() => setCompletedOverlayTask(null)}>
-                  See next step
-                </button>
-              )}
-              <button className="ss-btn-link" onClick={() => setCompletedOverlayTask(null)}>
-                Back to plan
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

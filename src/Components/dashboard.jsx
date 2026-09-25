@@ -13,6 +13,7 @@ function computeVariant(user) {
 
   if (!user?.hasVisitedDashboard) return "first-time";
   if (total > 0 && completed === total) return "plan-complete";
+  if (user?.paused) return "paused";
 
   if (user?.lastActiveAt) {
     const daysSince = (Date.now() - new Date(user.lastActiveAt).getTime()) / 86400000;
@@ -111,6 +112,32 @@ export default function Dashboard() {
             <Link to="/plan" className="ss-btn-secondary">
               Start a new plan
             </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ---------- Paused ----------
+  if (variant === "paused") {
+    return (
+      <div className="ss-page">
+        <div className="ss-page__inner">
+          <p className="ss-dashboard__greeting-label">{timeGreeting()}</p>
+          <h1 className="ss-dashboard__greeting">{firstName} 👋</h1>
+          {courseRow}
+          <div className="ss-paused-banner">
+            <p>
+              Your plan is paused{user?.pauseReturnDate ? ` until ${user.pauseReturnDate}` : ""}. Everything's
+              saved exactly as you left it.
+            </p>
+            <button
+              type="button"
+              className="ss-btn-primary"
+              onClick={() => setUser((prev) => ({ ...prev, paused: false }))}
+            >
+              Resume now
+            </button>
           </div>
         </div>
       </div>
