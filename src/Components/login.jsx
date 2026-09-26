@@ -1,4 +1,5 @@
 import { useState } from "react";
+import PasswordField from "./password-field";
 import "../App.css";
 
 export default function Login({ onSubmit = () => {}, onNavigateSignup = () => {} }) {
@@ -32,21 +33,20 @@ export default function Login({ onSubmit = () => {}, onNavigateSignup = () => {}
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
             />
             {errors.email && <div className="ss-field__error">{errors.email}</div>}
           </div>
 
-          <div className={errors.password ? "ss-field ss-field--error" : "ss-field"}>
-            <label htmlFor="login-password">Password</label>
-            <input
-              id="login-password"
-              type="password"
-              placeholder="Enter password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            {errors.password && <div className="ss-field__error">{errors.password}</div>}
-          </div>
+          <PasswordField
+            id="login-password"
+            label="Password"
+            placeholder="Enter password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            error={errors.password}
+            autoComplete="current-password"
+          />
 
           <div className="ss-auth-row">
             <a href="#forgot-password" className="ss-auth-link">

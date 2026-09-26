@@ -1,4 +1,6 @@
 import { useState } from "react";
+import PasswordField from "./password-field";
+import EmailQuickAccess from "./email-quick-access";
 import "../App.css";
 
 export default function Signup({ onSubmit = () => {}, onNavigateLogin = () => {} }) {
@@ -41,6 +43,7 @@ export default function Signup({ onSubmit = () => {}, onNavigateLogin = () => {}
               placeholder="Enter your full name"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
+              autoComplete="name"
             />
             {errors.fullName && <div className="ss-field__error">{errors.fullName}</div>}
           </div>
@@ -50,40 +53,37 @@ export default function Signup({ onSubmit = () => {}, onNavigateLogin = () => {}
             <input
               id="signup-email"
               type="email"
+              inputMode="email"
               placeholder="your@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
             />
             {errors.email && <div className="ss-field__error">{errors.email}</div>}
           </div>
 
-          <div className={errors.password ? "ss-field ss-field--error" : "ss-field"}>
-            <label htmlFor="signup-password">Password</label>
-            <input
-              id="signup-password"
-              type="password"
-              placeholder="Create a password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            {errors.password ? (
-              <div className="ss-field__error">{errors.password}</div>
-            ) : (
-              <div className="ss-field__hint">At least 8 characters</div>
-            )}
-          </div>
+          {email.includes("@") && <EmailQuickAccess email={email} />}
 
-          <div className={errors.confirmPassword ? "ss-field ss-field--error" : "ss-field"}>
-            <label htmlFor="signup-confirm">Confirm password</label>
-            <input
-              id="signup-confirm"
-              type="password"
-              placeholder="Confirm your password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-            />
-            {errors.confirmPassword && <div className="ss-field__error">{errors.confirmPassword}</div>}
-          </div>
+          <PasswordField
+            id="signup-password"
+            label="Password"
+            placeholder="Create a password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            error={errors.password}
+            hint={!errors.password ? "At least 8 characters" : undefined}
+            autoComplete="new-password"
+          />
+
+          <PasswordField
+            id="signup-confirm"
+            label="Confirm password"
+            placeholder="Confirm your password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            error={errors.confirmPassword}
+            autoComplete="new-password"
+          />
 
           <button type="submit" className="ss-btn-primary">
             Create account

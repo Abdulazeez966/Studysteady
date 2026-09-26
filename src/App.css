@@ -1751,3 +1751,71 @@ a {
   font-weight: 700;
   margin: 0 auto 16px;
 }
+
+/* ---------- Password visibility toggle ---------- */
+
+.ss-password-wrap {
+  position: relative;
+}
+
+.ss-password-wrap input {
+  width: 100%;
+  padding-right: 44px;
+}
+
+.ss-password-toggle {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--ss-stone);
+  cursor: pointer;
+  padding: 0;
+  /* generous hit target for mobile taps, not just visual size */
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ss-password-toggle:hover {
+  color: var(--ss-teal);
+}
+
+/* ---------- Email quick-access (Signup) ---------- */
+
+.ss-email-quick-access {
+  margin: -8px 0 18px;
+}
+
+.ss-email-quick-access__label {
+  display: block;
+  font-size: 11.5px;
+  color: var(--ss-stone);
+  margin-bottom: 6px;
+}
+
+.ss-email-quick-access__links {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ss-email-quick-access__links a {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ss-teal);
+  background: var(--ss-teal-tint);
+  border-radius: 100px;
+  padding: 6px 12px;
+  text-decoration: none;
+}
+
+.ss-email-quick-access__links a:hover {
+  background: var(--ss-teal);
+  color: var(--ss-white);
+}
