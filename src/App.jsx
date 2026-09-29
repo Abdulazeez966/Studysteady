@@ -12,6 +12,7 @@ import PlanPauseDate from "./Components/plan-pause-date";
 import PlanPauseConfirm from "./Components/plan-pause-confirm";
 import PlanScheduleEditor from "./Components/plan-schedule-editor";
 import PlanUpdatedPreview from "./Components/plan-updated-preview";
+import PlanReminders from "./Components/plan-reminders";
 import Progress from "./Components/progress";
 import Settings from "./Components/settings";
 import Reminders from "./Components/reminders";
@@ -20,12 +21,6 @@ import PlanControls from "./Components/plan-controls";
 import CatchupView from "./Components/catchup";
 import { UserProvider, useUser } from "./user-context";
 import "./App.css";
-
-let taskIdCounter = 0;
-function taskId() {
-  taskIdCounter += 1;
-  return `ob-task-${Date.now()}-${taskIdCounter}`;
-}
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -60,13 +55,8 @@ function OnboardingPage() {
   const { setUser } = useUser();
   return (
     <Onboarding
-      onSubmit={({ goal, why, programme, activities, weeklyTime, days, remindersEnabled, reminderDays, reminderTime }) => {
-        const tasks = activities.map((title) => ({ id: taskId(), title, status: "pending" }));
-        setUser((prev) => ({
-          ...prev,
-          goal, why, programme, weeklyTime, days, tasks,
-          remindersEnabled, reminderDays, reminderTime,
-        }));
+      onSubmit={({ course }) => {
+        setUser((prev) => ({ ...prev, courses: [...(prev?.courses || []), course] }));
         navigate("/dashboard");
       }}
     />
@@ -87,11 +77,12 @@ export default function App() {
             <Route path="/dashboard" element={<Dashboard />} />
 
             <Route path="/plan" element={<Plan />} />
-            <Route path="/plan/pause" element={<PlanPauseChoice />} />
-            <Route path="/plan/pause/date" element={<PlanPauseDate />} />
-            <Route path="/plan/pause/confirm" element={<PlanPauseConfirm />} />
-            <Route path="/plan/pause/schedule" element={<PlanScheduleEditor />} />
-            <Route path="/plan/pause/preview" element={<PlanUpdatedPreview />} />
+            <Route path="/plan/pause/:scope/:id" element={<PlanPauseChoice />} />
+            <Route path="/plan/pause/:scope/:id/date" element={<PlanPauseDate />} />
+            <Route path="/plan/pause/:scope/:id/confirm" element={<PlanPauseConfirm />} />
+            <Route path="/plan/pause/:scope/:id/schedule" element={<PlanScheduleEditor />} />
+            <Route path="/plan/pause/:scope/:id/preview" element={<PlanUpdatedPreview />} />
+            <Route path="/plan/reminders/:scope/:id" element={<PlanReminders />} />
             <Route path="/plan/:taskId" element={<TaskView />} />
 
             <Route path="/progress" element={<Progress />} />
@@ -101,8 +92,6 @@ export default function App() {
             <Route path="/settings/account" element={<Account />} />
             <Route path="/settings/plan" element={<PlanControls />} />
 
-            {/* Catch-up is contextual, not a nav tab — reached only from the
-                Dashboard's catch-up state, per the architecture doc. */}
             <Route path="/catchup" element={<CatchupView />} />
           </Route>
 

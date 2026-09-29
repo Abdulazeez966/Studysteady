@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "../App.css";
+import { WEEKDAYS, daysPatternToList, uid } from "./course-utils";
 
 const TOTAL_STEPS = 6;
 
@@ -12,6 +12,7 @@ export default function Onboarding({ onSubmit = () => {} }) {
   const [programme, setProgramme] = useState("");
   const [activities, setActivities] = useState([]);
   const [activityDraft, setActivityDraft] = useState("");
+  const [minutesDraft, setMinutesDraft] = useState("30");
   const [weeklyTime, setWeeklyTime] = useState("3 hours");
   const [days, setDays] = useState("Tue / Thu / Sat");
   const [remindersEnabled, setRemindersEnabled] = useState(true);
@@ -40,8 +41,9 @@ export default function Onboarding({ onSubmit = () => {} }) {
   function addActivity(e) {
     e.preventDefault();
     if (!activityDraft.trim()) return;
-    setActivities((a) => [...a, activityDraft.trim()]);
+    setActivities((a) => [...a, { title: activityDraft.trim(), minutes: Number(minutesDraft) >= 5 ? Number(minutesDraft) : 30 }]);
     setActivityDraft("");
+    setMinutesDraft("30");
     setError("");
   }
 
@@ -50,17 +52,35 @@ export default function Onboarding({ onSubmit = () => {} }) {
   }
 
   function finish(startNow) {
-    onSubmit({
-      goal, why, programme, activities, weeklyTime, days,
-      remindersEnabled: startNow ? remindersEnabled : false,
-      reminderDays, reminderTime, startNow,
-    });
+    const dayList = daysPatternToList(days);
+    const tasks = activities.map((a, i) => ({
+      id: uid("task"),
+      title: a.title,
+      status: "pending",
+      scheduledDay: dayList[i % dayList.length],
+      estimatedMinutes: a.minutes,
+    }));
+    const course = {
+      id: uid("course"),
+      title: goal,
+      provider: programme,
+      why,
+      weeklyTime,
+      days,
+      paused: false,
+      pauseReturnDate: null,
+      reminderOverride: startNow
+        ? { enabled: remindersEnabled, days: reminderDays, time: reminderTime }
+        : null,
+      tasks,
+    };
+    onSubmit({ course, startNow });
   }
 
   if (showIntro) {
     return (
       <div className="ss-onboarding">
-        <div className="ss-onboarding-card">
+        <div className="ss-card ss-onboarding-card">
           <div className="ss-onboarding-intro">
             <h1>Let's set up your plan</h1>
             <p>A few quick steps — your goal, your activities, and how much time you've got. Takes about a minute.</p>
@@ -77,7 +97,7 @@ export default function Onboarding({ onSubmit = () => {} }) {
 
   return (
     <div className="ss-onboarding">
-      <div className="ss-onboarding-card">
+      <div className="ss-card ss-onboarding-card">
         <div className="ss-onboarding-progress">
           <div className="ss-onboarding-progress__fill" style={{ width: `${progressPct}%` }} />
         </div>
@@ -135,9 +155,9 @@ export default function Onboarding({ onSubmit = () => {} }) {
             {activities.length > 0 && (
               <ul className="ss-onboarding-activities">
                 {activities.map((a, i) => (
-                  <li key={i}>
-                    <span>{a}</span>
-                    <button type="button" onClick={() => removeActivity(i)} aria-label={`Remove ${a}`}>×</button>
+                  <li key={i} className="ss-list-row">
+                    <span>{a.title} · {a.minutes}m</span>
+                    <button type="button" onClick={() => removeActivity(i)} aria-label={`Remove ${a.title}`}>×</button>
                   </li>
                 ))}
               </ul>
@@ -149,9 +169,18 @@ export default function Onboarding({ onSubmit = () => {} }) {
                 value={activityDraft}
                 onChange={(e) => setActivityDraft(e.target.value)}
               />
+              <input
+                type="number"
+                min="5"
+                step="5"
+                className="ss-plan-add__minutes"
+                aria-label="Minutes for this activity"
+                value={minutesDraft}
+                onChange={(e) => setMinutesDraft(e.target.value)}
+              />
               <button type="submit" className="ss-btn-primary ss-btn-primary--compact">Add</button>
             </form>
-            {error && <div className="ss-field__error" style={{ marginBottom: 12 }}>{error}</div>}
+            {error && <div className="ss-field__error ss-standalone-error">{error}</div>}
           </>
         )}
 
@@ -184,17 +213,17 @@ export default function Onboarding({ onSubmit = () => {} }) {
           <>
             <h1>Your plan is ready</h1>
             <p className="ss-onboarding-card__sub">Here's what we've put together for you.</p>
-            <div className="ss-card" style={{ marginBottom: 20 }}>
-              <p className="ss-eyebrow ss-eyebrow--teal" style={{ marginBottom: 6 }}>Goal</p>
-              <p style={{ fontWeight: 700, marginBottom: 4 }}>{goal || "—"}</p>
-              <p style={{ fontSize: 12.5, color: "var(--ss-stone)" }}>{days} · {weeklyTime}</p>
+            <div className="ss-card ss-onboarding-preview-card">
+              <p className="ss-eyebrow ss-eyebrow--teal ss-eyebrow--spaced">Goal</p>
+              <p className="ss-onboarding-preview-goal-name">{goal || "—"}</p>
+              <p className="ss-onboarding-preview-goal-meta">{days} · {weeklyTime}</p>
             </div>
             <p className="ss-section-label">First {Math.min(5, activities.length)} activities</p>
             <ol className="ss-onboarding-preview-list">
               {activities.slice(0, 5).map((a, i) => (
                 <li key={i}>
                   <span className="num">{i + 1}</span>
-                  <span>{a}</span>
+                  <span>{a.title} · {a.minutes}m</span>
                 </li>
               ))}
             </ol>
@@ -224,7 +253,7 @@ export default function Onboarding({ onSubmit = () => {} }) {
 
             <p className="ss-section-label">Remind me on</p>
             <div className="ss-day-picker">
-              {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day, i) => (
+              {WEEKDAYS.map((day, i) => (
                 <button
                   key={day}
                   type="button"
@@ -239,12 +268,12 @@ export default function Onboarding({ onSubmit = () => {} }) {
             </div>
 
             <p className="ss-section-label">Time of day</p>
-            <div className="ss-time-picker">
+            <div className="ss-segmented">
               {["Morning", "Afternoon", "Evening"].map((opt) => (
                 <button
                   key={opt}
                   type="button"
-                  className={reminderTime === opt ? "ss-time-picker__opt--on" : ""}
+                  className={reminderTime === opt ? "ss-segmented__opt--on" : ""}
                   onClick={() => setReminderTime(opt)}
                   disabled={!remindersEnabled}
                 >

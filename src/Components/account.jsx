@@ -1,6 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useUser } from "../user-context";
-import "../App.css";
 
 export default function Account() {
   const { user, setUser } = useUser();
@@ -25,10 +24,10 @@ export default function Account() {
           <h1>Account</h1>
         </div>
 
-        <div className="ss-card" style={{ textAlign: "center" }}>
+        <div className="ss-card ss-card--center">
           <div className="ss-account-page-avatar">{initial}</div>
-          <p style={{ fontFamily: "var(--ss-font-display)", fontWeight: 700, fontSize: 17 }}>{user?.name || "—"}</p>
-          <p style={{ fontSize: 12.5, color: "var(--ss-stone)", marginBottom: 24 }}>{user?.email || "—"}</p>
+          <p className="ss-account-page-name">{user?.name || "—"}</p>
+          <p className="ss-account-page-email">{user?.email || "—"}</p>
           <button type="button" className="ss-logout-btn" onClick={logOut}>
             Log out
           </button>

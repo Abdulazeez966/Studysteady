@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useUser } from "../user-context";
-import "../App.css";
 
 const DAY_LETTERS = ["M", "T", "W", "T", "F", "S", "S"];
 const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -84,12 +83,12 @@ export default function Reminders() {
         </div>
 
         <p className="ss-section-label">Time of day</p>
-        <div className="ss-time-picker">
+        <div className="ss-segmented">
           {["Morning", "Afternoon", "Evening"].map((opt) => (
             <button
               key={opt}
               type="button"
-              className={timeOfDay === opt ? "ss-time-picker__opt--on" : ""}
+              className={timeOfDay === opt ? "ss-segmented__opt--on" : ""}
               onClick={() => { setTimeOfDay(opt); setSaved(false); }}
             >
               {opt}
@@ -102,7 +101,7 @@ export default function Reminders() {
         <button type="button" className="ss-btn-primary" onClick={save}>
           Save preferences
         </button>
-        {saved && <div className="ss-inline-saved" style={{ display: "block", textAlign: "center", marginTop: 10, marginLeft: 0 }}>Preferences saved.</div>}
+        {saved && <div className="ss-inline-saved ss-inline-saved--block">Preferences saved.</div>}
       </div>
     </div>
   );

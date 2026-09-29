@@ -1,13 +1,13 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useUser } from "../user-context";
-import "../App.css";
+import { getAllTasksFlat, getWaitingTasks } from "./course-utils";
 
 export default function CatchupView() {
   const { user, setUser } = useUser();
   const navigate = useNavigate();
-  const tasks = user?.tasks ?? [];
-  const completed = tasks.filter((t) => t.status === "completed");
-  const waiting = tasks.filter((t) => t.status !== "completed");
+  const allTasks = getAllTasksFlat(user?.courses || []);
+  const completed = allTasks.filter((t) => t.status === "completed");
+  const waiting = getWaitingTasks(user?.courses || []);
   const recoveryTask = waiting[0];
 
   function startRecovery() {
@@ -17,9 +17,12 @@ export default function CatchupView() {
     }
     setUser((prev) => ({
       ...prev,
-      tasks: (prev.tasks || []).map((t) => (t.id === recoveryTask.id ? { ...t, status: "in_progress" } : t)),
+      courses: (prev.courses || []).map((c) => ({
+        ...c,
+        tasks: (c.tasks || []).map((t) => (t.id === recoveryTask.id ? { ...t, status: "in_progress" } : t)),
+      })),
     }));
-    navigate("/plan");
+    navigate(`/plan/${recoveryTask.id}`);
   }
 
   return (
@@ -51,11 +54,11 @@ export default function CatchupView() {
 
         {waiting.length > 0 && (
           <>
-            <p className="ss-eyebrow" style={{ marginBottom: 10 }}>Activities waiting ({waiting.length})</p>
+            <p className="ss-eyebrow ss-catchup-activities-label">Activities waiting ({waiting.length})</p>
             <ul className="ss-waiting-list">
               {waiting.map((t) => (
-                <li key={t.id}>
-                  <span>{t.title}</span>
+                <li key={t.id} className="ss-list-row">
+                  <span>{t.title} <span className="ss-waiting-list__course">· {t.courseTitle}</span></span>
                   <span className="ss-waiting-list__meta">
                     {t.status === "in_progress" ? "In progress" : "Pending"}
                   </span>
@@ -66,11 +69,9 @@ export default function CatchupView() {
         )}
 
         {recoveryTask && (
-          <div className="ss-recovery-card">
+          <div className="ss-card ss-recovery-card">
             <span className="ss-badge">Start here</span>
-            <h2 style={{ fontFamily: "var(--ss-font-display)", fontSize: 18, fontWeight: 700, margin: "10px 0 16px" }}>
-              {recoveryTask.title}
-            </h2>
+            <h2 className="ss-recovery-card__title">{recoveryTask.title}</h2>
             <button type="button" className="ss-btn-primary" onClick={startRecovery}>
               Begin this activity
             </button>

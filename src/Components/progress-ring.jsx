@@ -1,5 +1,3 @@
-// Shared circular progress indicator — used by the Dashboard, Progress page,
-// and the completion overlay, so the ring only needs to be built once.
 
 export default function ProgressRing({ value = 0, max = 10, size = 96, strokeWidth = 9 }) {
   const radius = (size - strokeWidth) / 2;

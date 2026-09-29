@@ -1,9 +1,10 @@
 import { Link } from "react-router-dom";
 import { useUser } from "../user-context";
-import "../App.css";
+import { isPaused } from "./course-utils";
 
 export default function PlanControls() {
   const { user } = useUser();
+  const courses = user?.courses || [];
 
   return (
     <div className="ss-page">
@@ -16,16 +17,27 @@ export default function PlanControls() {
         </Link>
         <div className="ss-page-header">
           <h1>Plan controls</h1>
-          <p className="ss-page-header__sub">
-            {user?.paused
-              ? `Your plan is currently paused until ${user.pauseReturnDate || "your return date"}.`
-              : "Pause your plan, or adjust your pace and schedule."}
-          </p>
+          <p className="ss-page-header__sub">Pause or adjust any course, or go to a task to control it on its own.</p>
         </div>
 
-        <Link to="/plan/pause" className="ss-btn-primary" style={{ textDecoration: "none" }}>
-          Pause / Adjust
-        </Link>
+        {courses.length === 0 ? (
+          <p className="ss-empty-state">No courses yet.</p>
+        ) : (
+          <ul className="ss-course-list">
+            {courses.map((course) => (
+              <li key={course.id}>
+                <Link to={`/plan/pause/course/${course.id}`} className="ss-course-row">
+                  <div>
+                    <div className="ss-course-row__title">{course.title}</div>
+                    <div className="ss-course-row__provider">
+                      {isPaused(course) ? `Paused until ${course.pauseReturnDate || "—"}` : "Active"}
+                    </div>
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );

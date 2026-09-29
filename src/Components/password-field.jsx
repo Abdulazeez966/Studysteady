@@ -1,10 +1,5 @@
 import { useState } from "react";
-import "../App.css";
 
-// Custom show/hide toggle instead of relying on the browser's native reveal
-// icon — that native icon is desktop-Chrome/Edge-only and doesn't reliably
-// appear on mobile browsers, which is exactly the "works on laptop, not on
-// mobile" gap this fixes.
 
 export default function PasswordField({
   id,

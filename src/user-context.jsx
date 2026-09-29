@@ -1,9 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
-// Frontend-only "who's using the app right now" store.
-// No verification, no server round-trip — just remembers what was typed
-// at signup/login so the rest of the UI can greet the user by name.
-// Swap this out for real auth state later; nothing downstream should change.
 
 const UserContext = createContext(null);
 const STORAGE_KEY = "studysteady_user";
@@ -26,8 +22,6 @@ export function UserProvider({ children }) {
         localStorage.removeItem(STORAGE_KEY);
       }
     } catch {
-      // localStorage unavailable (e.g. private browsing) — fail silently,
-      // user just won't persist across refreshes.
     }
   }, [user]);
 

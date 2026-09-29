@@ -1,6 +1,5 @@
 import { useState } from "react";
 import PasswordField from "./password-field";
-import "../App.css";
 
 export default function Login({ onSubmit = () => {}, onNavigateSignup = () => {} }) {
   const [email, setEmail] = useState("");
@@ -20,7 +19,7 @@ export default function Login({ onSubmit = () => {}, onNavigateSignup = () => {}
 
   return (
     <div className="ss-auth">
-      <div className="ss-auth-card">
+      <div className="ss-card ss-auth-card">
         <h1>Welcome back</h1>
         <p className="ss-auth-card__sub">Log in to your journey.</p>
 

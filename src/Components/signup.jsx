@@ -1,7 +1,6 @@
 import { useState } from "react";
 import PasswordField from "./password-field";
 import EmailQuickAccess from "./email-quick-access";
-import "../App.css";
 
 export default function Signup({ onSubmit = () => {}, onNavigateLogin = () => {} }) {
   const [fullName, setFullName] = useState("");
@@ -30,7 +29,7 @@ export default function Signup({ onSubmit = () => {}, onNavigateLogin = () => {}
 
   return (
     <div className="ss-auth">
-      <div className="ss-auth-card">
+      <div className="ss-card ss-auth-card">
         <h1>Create account</h1>
         <p className="ss-auth-card__sub">Let's get you set up in a few steps.</p>
 

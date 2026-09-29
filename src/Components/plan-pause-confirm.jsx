@@ -1,13 +1,13 @@
-import { useNavigate } from "react-router-dom";
-import { useUser } from "../user-context";
-import "../App.css";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 export default function PlanPauseConfirm() {
-  const { user } = useUser();
+  const { scope } = useParams();
+  const [params] = useSearchParams();
   const navigate = useNavigate();
+  const date = params.get("date");
 
-  const dateLabel = user?.pauseReturnDate
-    ? new Date(user.pauseReturnDate).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })
+  const dateLabel = date
+    ? new Date(date).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })
     : "your return date";
 
   return (
@@ -20,9 +20,12 @@ export default function PlanPauseConfirm() {
             </svg>
           </div>
           <h1>You're all set.</h1>
-          <p>Your plan is paused until {dateLabel}. Everything you've done stays right where it is — pick up whenever you're ready.</p>
-          <button type="button" className="ss-btn-primary" onClick={() => navigate("/dashboard")}>
-            Go to dashboard
+          <p>
+            {scope === "course" ? "This course is" : "This activity is"} paused until {dateLabel}. Everything
+            you've done stays right where it is — pick up whenever you're ready.
+          </p>
+          <button type="button" className="ss-btn-primary" onClick={() => navigate("/plan")}>
+            Back to Plan
           </button>
         </div>
       </div>

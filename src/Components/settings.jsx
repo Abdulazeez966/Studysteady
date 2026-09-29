@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import { useUser } from "../user-context";
-import "../App.css";
 
 function Chevron() {
   return (
@@ -25,7 +24,7 @@ export default function Settings() {
           <ul className="ss-settings-list">
             <li>
               <Link to="/settings/account" className="ss-settings-row">
-                <div className="ss-account-card" style={{ marginBottom: 0 }}>
+                <div className="ss-account-card ss-account-card--flush">
                   <div className="ss-account-avatar">{initial}</div>
                   <div>
                     <div className="ss-account-name">{user?.name || "Your account"}</div>
