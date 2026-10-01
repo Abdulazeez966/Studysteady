@@ -1,12 +1,38 @@
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useUser } from "../user-context";
-import { findCourse, findTask } from "./course-utils";
+import { getEvent, getGoal, getPlan } from "./api";
 
 export default function PlanPauseChoice() {
   const { scope, id } = useParams();
   const { user } = useUser();
-  const courses = user?.courses || [];
-  const label = scope === "course" ? findCourse(courses, id)?.title : findTask(courses, id)?.task?.title;
+  const [label, setLabel] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      if (!user?.token || !id) return;
+      try {
+        if (scope === "course") {
+          const plan = await getPlan(user.token, id);
+          const goalId = plan?.goal?._id || plan?.goal?.id || plan?.goal;
+          const goal = goalId ? await getGoal(user.token, goalId) : null;
+          if (!cancelled) setLabel(goal?.subject || "Course");
+        } else {
+          const event = await getEvent(user.token, id);
+          if (!cancelled) setLabel(event?.title || "Activity");
+        }
+      } catch {
+        if (!cancelled) setLabel(scope === "course" ? "Course" : "Activity");
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.token, scope, id]);
 
   return (
     <div className="ss-page">

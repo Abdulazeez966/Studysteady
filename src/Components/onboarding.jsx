@@ -1,9 +1,12 @@
 import { useState } from "react";
-import { WEEKDAYS, daysPatternToList, uid } from "./course-utils";
+import { WEEKDAYS, daysPatternToList } from "./course-utils";
+import { createCourse, updateAccountReminders } from "./api";
+import { useUser } from "../user-context";
 
 const TOTAL_STEPS = 6;
 
 export default function Onboarding({ onSubmit = () => {} }) {
+  const { user, isLoading, setLoading, error: apiError, setError } = useUser();
   const [showIntro, setShowIntro] = useState(true);
   const [step, setStep] = useState(1);
 
@@ -18,23 +21,23 @@ export default function Onboarding({ onSubmit = () => {} }) {
   const [remindersEnabled, setRemindersEnabled] = useState(true);
   const [reminderDays, setReminderDays] = useState({ Tuesday: true, Thursday: true, Saturday: true });
   const [reminderTime, setReminderTime] = useState("Evening");
-  const [error, setError] = useState("");
+  const [error, setValidationError] = useState("");
 
   function next() {
-    setError("");
+    setValidationError("");
     if (step === 1 && !goal.trim()) {
-      setError("Tell us what you're learning.");
+      setValidationError("Tell us what you're learning.");
       return;
     }
     if (step === 3 && activities.length === 0) {
-      setError("Add at least one activity.");
+      setValidationError("Add at least one activity.");
       return;
     }
     setStep((s) => Math.min(s + 1, TOTAL_STEPS));
   }
 
   function back() {
-    setError("");
+    setValidationError("");
     setStep((s) => Math.max(s - 1, 1));
   }
 
@@ -44,37 +47,57 @@ export default function Onboarding({ onSubmit = () => {} }) {
     setActivities((a) => [...a, { title: activityDraft.trim(), minutes: Number(minutesDraft) >= 5 ? Number(minutesDraft) : 30 }]);
     setActivityDraft("");
     setMinutesDraft("30");
-    setError("");
+    setValidationError("");
   }
 
   function removeActivity(i) {
     setActivities((a) => a.filter((_, idx) => idx !== i));
   }
 
-  function finish(startNow) {
-    const dayList = daysPatternToList(days);
-    const tasks = activities.map((a, i) => ({
-      id: uid("task"),
-      title: a.title,
-      status: "pending",
-      scheduledDay: dayList[i % dayList.length],
-      estimatedMinutes: a.minutes,
-    }));
-    const course = {
-      id: uid("course"),
-      title: goal,
-      provider: programme,
-      why,
-      weeklyTime,
-      days,
-      paused: false,
-      pauseReturnDate: null,
-      reminderOverride: startNow
-        ? { enabled: remindersEnabled, days: reminderDays, time: reminderTime }
-        : null,
-      tasks,
-    };
-    onSubmit({ course, startNow });
+  async function finish(startNow) {
+    if (isLoading) return;
+    if (!user?.token) {
+      setError("Your session has expired. Please log in again.");
+      return;
+    }
+
+    setError("");
+    setLoading(true);
+
+    try {
+      const courseData = await createCourse(user.token, {
+        title: goal.trim(),
+        description: why.trim(),
+        provider: programme.trim(),
+        weeklyTime,
+        days: daysPatternToList(days),
+        activities: activities.map((activity) => ({
+          title: activity.title,
+          estimatedMinutes: activity.minutes,
+        })),
+      });
+
+      const goalData = courseData?.goal;
+      if (!goalData?._id && !goalData?.id) {
+        throw new Error("The course was created, but the server did not return its goal.");
+      }
+
+      if (startNow) {
+        const reminderTimeValue = { Morning: "09:00", Afternoon: "14:00", Evening: "18:00" }[reminderTime];
+        const reminderDaysList = WEEKDAYS.filter((day) => reminderDays[day]);
+        await updateAccountReminders(user.token, {
+          enabled: remindersEnabled,
+          days: remindersEnabled ? reminderDaysList : [],
+          time: remindersEnabled ? reminderTimeValue : null,
+        });
+      }
+
+      onSubmit({ goal: goalData, startNow });
+    } catch (submitError) {
+      setError(submitError?.message || "We couldn't save your plan. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   if (showIntro) {
@@ -98,6 +121,8 @@ export default function Onboarding({ onSubmit = () => {} }) {
   return (
     <div className="ss-onboarding">
       <div className="ss-card ss-onboarding-card">
+        {apiError && <div className="ss-field__error ss-standalone-error">{apiError}</div>}
+
         <div className="ss-onboarding-progress">
           <div className="ss-onboarding-progress__fill" style={{ width: `${progressPct}%` }} />
         </div>
@@ -296,11 +321,11 @@ export default function Onboarding({ onSubmit = () => {} }) {
             </button>
           ) : (
             <>
-              <button type="button" className="ss-btn-secondary" onClick={() => finish(false)}>
+              <button type="button" className="ss-btn-secondary" onClick={() => finish(false)} disabled={isLoading}>
                 Skip
               </button>
-              <button type="button" className="ss-btn-primary" onClick={() => finish(true)}>
-                Save and start
+              <button type="button" className="ss-btn-primary" onClick={() => finish(true)} disabled={isLoading}>
+                {isLoading ? "Saving…" : "Save and start"}
               </button>
             </>
           )}

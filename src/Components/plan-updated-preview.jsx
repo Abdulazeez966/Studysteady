@@ -1,16 +1,57 @@
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useUser } from "../user-context";
-import { findCourse, findTask } from "./course-utils";
+import { getActivities, getEvent, getEvents, getPlan } from "./api";
+import { WEEKDAYS } from "./course-utils";
+
+function dayName(dateValue) {
+  const date = new Date(dateValue);
+  return WEEKDAYS[date.getDay() === 0 ? 6 : date.getDay() - 1];
+}
 
 export default function PlanUpdatedPreview() {
   const { scope, id } = useParams();
   const { user } = useUser();
   const navigate = useNavigate();
-  const courses = user?.courses || [];
+  const [plan, setPlan] = useState(null);
+  const [event, setEvent] = useState(null);
+  const [remaining, setRemaining] = useState(0);
+  const [error, setError] = useState("");
 
-  const course = scope === "course" ? findCourse(courses, id) : findTask(courses, id)?.course;
-  const task = scope === "task" ? findTask(courses, id)?.task : null;
-  const remaining = (course?.tasks || []).filter((t) => t.status !== "completed").length;
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      if (!user?.token || !id) return;
+      try {
+        if (scope === "course") {
+          const planData = await getPlan(user.token, id);
+          const [eventsData, activitiesData] = await Promise.all([
+            getEvents(user.token, { planId: id }),
+            getActivities(user.token, { planId: id }),
+          ]);
+          const activities = Array.isArray(activitiesData) ? activitiesData : [];
+          const completedEvents = new Set(activities.filter((activity) => activity.status === "completed").map((activity) => String(activity.event?._id || activity.event)));
+          const events = Array.isArray(eventsData) ? eventsData : [];
+          const count = events.filter((item) => !completedEvents.has(String(item._id || item.id))).length;
+          if (!cancelled) {
+            setPlan(planData);
+            setRemaining(count);
+          }
+        } else {
+          const eventData = await getEvent(user.token, id);
+          if (!cancelled) setEvent(eventData);
+        }
+      } catch (err) {
+        if (!cancelled) setError(err.message || "We couldn't load the updated schedule.");
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.token, scope, id]);
 
   return (
     <div className="ss-page">
@@ -25,11 +66,11 @@ export default function PlanUpdatedPreview() {
             <>
               <div className="ss-preview-summary__row">
                 <span>Weekly time</span>
-                <span>{course?.weeklyTime || "—"}</span>
+                <span>{plan?.weeklyTime || "—"}</span>
               </div>
               <div className="ss-preview-summary__row">
                 <span>Days</span>
-                <span>{course?.days || "—"}</span>
+                <span>{(plan?.daysOfWeek || []).join(" / ") || "—"}</span>
               </div>
               <div className="ss-preview-summary__row">
                 <span>Activities remaining</span>
@@ -39,11 +80,12 @@ export default function PlanUpdatedPreview() {
           ) : (
             <div className="ss-preview-summary__row">
               <span>Now scheduled for</span>
-              <span>{task?.scheduledDay || "—"}</span>
+              <span>{event?.scheduledDate ? dayName(event.scheduledDate) : "—"}</span>
             </div>
           )}
         </div>
 
+        {error && <div className="ss-field__error">{error}</div>}
         <button type="button" className="ss-btn-primary" onClick={() => navigate("/plan")}>
           Continue
         </button>

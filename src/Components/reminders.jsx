@@ -1,40 +1,79 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useUser } from "../user-context";
+import { getAccountReminders, updateAccountReminders } from "./api";
+import { WEEKDAYS, normalizeReminder, reminderMapToList, reminderTimeToValue } from "./course-utils";
 
 const DAY_LETTERS = ["M", "T", "W", "T", "F", "S", "S"];
-const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-
-const ABBREV_TO_FULL = {
-  Mon: "Monday", Tue: "Tuesday", Wed: "Wednesday", Thu: "Thursday", Fri: "Friday", Sat: "Saturday", Sun: "Sunday",
-};
-
-function defaultReminderDays(days) {
-  const map = Object.fromEntries(WEEKDAYS.map((d) => [d, false]));
-  if (!days) return map;
-  days.split("/").map((s) => s.trim()).forEach((abbr) => {
-    const full = ABBREV_TO_FULL[abbr];
-    if (full) map[full] = true;
-  });
-  return map;
-}
 
 export default function Reminders() {
-  const { user, setUser } = useUser();
-
-  const [enabled, setEnabled] = useState(user?.remindersEnabled ?? true);
-  const [reminderDays, setReminderDays] = useState(user?.reminderDays ?? defaultReminderDays(user?.days));
-  const [timeOfDay, setTimeOfDay] = useState(user?.reminderTime ?? "Evening");
+  const { user } = useUser();
+  const token = user?.token;
+  const [enabled, setEnabled] = useState(false);
+  const [reminderDays, setReminderDays] = useState({});
+  const [timeOfDay, setTimeOfDay] = useState("Evening");
   const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    async function load() {
+      if (!token) {
+        setLoading(false);
+        setError("Your session has expired. Please log in again.");
+        return;
+      }
+      setLoading(true);
+      setError("");
+      try {
+        const data = await getAccountReminders(token);
+        if (!active) return;
+        const reminder = normalizeReminder(data);
+        setEnabled(reminder.enabled);
+        setReminderDays(reminder.days);
+        setTimeOfDay(reminder.time);
+      } catch (err) {
+        if (active) setError(err?.message || "We couldn't load your reminder preferences.");
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+    load();
+    return () => { active = false; };
+  }, [token]);
 
   function toggleDay(day) {
     setReminderDays((prev) => ({ ...prev, [day]: !prev[day] }));
     setSaved(false);
   }
 
-  function save() {
-    setUser((prev) => ({ ...prev, remindersEnabled: enabled, reminderDays, reminderTime: timeOfDay }));
-    setSaved(true);
+  async function save() {
+    if (!token || saving) return;
+    setSaving(true);
+    setSaved(false);
+    setError("");
+    try {
+      const data = await updateAccountReminders(token, {
+        enabled,
+        days: enabled ? reminderMapToList(reminderDays) : [],
+        time: enabled ? reminderTimeToValue(timeOfDay) : null,
+      });
+      const reminder = normalizeReminder(data);
+      setEnabled(reminder.enabled);
+      setReminderDays(reminder.days);
+      setTimeOfDay(reminder.time);
+      setSaved(true);
+    } catch (err) {
+      setError(err?.message || "We couldn't save your reminder preferences.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading) {
+    return <div className="ss-page"><div className="ss-page__inner"><p className="ss-empty-state">Loading reminder settings…</p></div></div>;
   }
 
   return (
@@ -49,6 +88,8 @@ export default function Reminders() {
         <div className="ss-page-header">
           <h1>Reminder Settings</h1>
         </div>
+
+        {error && <div className="ss-field__error ss-standalone-error">{error}</div>}
 
         <div className="ss-reminder-toggle-card">
           <div>
@@ -76,6 +117,7 @@ export default function Reminders() {
               onClick={() => toggleDay(day)}
               aria-label={day}
               aria-pressed={reminderDays[day]}
+              disabled={!enabled}
             >
               {DAY_LETTERS[i]}
             </button>
@@ -90,6 +132,7 @@ export default function Reminders() {
               type="button"
               className={timeOfDay === opt ? "ss-segmented__opt--on" : ""}
               onClick={() => { setTimeOfDay(opt); setSaved(false); }}
+              disabled={!enabled}
             >
               {opt}
             </button>
@@ -98,8 +141,8 @@ export default function Reminders() {
 
         <p className="ss-reminders-note">Reminders help, but you're in control. Adjust these any time.</p>
 
-        <button type="button" className="ss-btn-primary" onClick={save}>
-          Save preferences
+        <button type="button" className="ss-btn-primary" onClick={save} disabled={saving}>
+          {saving ? "Saving…" : "Save preferences"}
         </button>
         {saved && <div className="ss-inline-saved ss-inline-saved--block">Preferences saved.</div>}
       </div>

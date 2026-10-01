@@ -20,6 +20,7 @@ import Account from "./Components/account";
 import PlanControls from "./Components/plan-controls";
 import CatchupView from "./Components/catchup";
 import { UserProvider, useUser } from "./user-context";
+import { registerUser, loginUser } from "./Components/api";
 import "./App.css";
 
 function LoginPage() {
@@ -27,8 +28,9 @@ function LoginPage() {
   const { setUser } = useUser();
   return (
     <Login
-      onSubmit={({ email }) => {
-        setUser((prev) => ({ ...prev, name: email.split("@")[0], email }));
+      onSubmit={async ({ email, password }) => {
+        const data = await loginUser({ email, password });
+        setUser((prev) => ({ ...prev, id: data.id, name: data.name, email: data.email, token: data.token }));
         navigate("/dashboard");
       }}
       onNavigateSignup={() => navigate("/signup")}
@@ -41,8 +43,10 @@ function SignupPage() {
   const { setUser } = useUser();
   return (
     <Signup
-      onSubmit={({ fullName, email }) => {
-        setUser((prev) => ({ ...prev, name: fullName, email }));
+      onSubmit={async ({ fullName, email, password }) => {
+        await registerUser({ name: fullName, email, password });
+        const data = await loginUser({ email, password });
+        setUser((prev) => ({ ...prev, id: data.id, name: data.name, email: data.email, token: data.token }));
         navigate("/onboarding");
       }}
       onNavigateLogin={() => navigate("/login")}
@@ -52,13 +56,9 @@ function SignupPage() {
 
 function OnboardingPage() {
   const navigate = useNavigate();
-  const { setUser } = useUser();
   return (
     <Onboarding
-      onSubmit={({ course }) => {
-        setUser((prev) => ({ ...prev, courses: [...(prev?.courses || []), course] }));
-        navigate("/dashboard");
-      }}
+      onSubmit={() => navigate("/dashboard")}
     />
   );
 }

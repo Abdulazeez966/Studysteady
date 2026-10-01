@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { useUser } from "../user-context";
+import { pauseEvent, pausePlan } from "./api";
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
@@ -8,23 +9,25 @@ function todayISO() {
 
 export default function PlanPauseDate() {
   const { scope, id } = useParams();
-  const { setUser } = useUser();
+  const { user } = useUser();
   const navigate = useNavigate();
   const [returnDate, setReturnDate] = useState("");
   const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
 
-  function submit(e) {
+  async function submit(e) {
     e.preventDefault();
     if (!returnDate) {
       setError("Pick a return date.");
       return;
     }
-    const chosen = new Date(returnDate);
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    const daysOut = (chosen - now) / 86400000;
 
-    if (daysOut < 0) {
+    const chosen = new Date(`${returnDate}T00:00:00`);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const daysOut = (chosen - today) / 86400000;
+
+    if (daysOut <= 0) {
       setError("Return date can't be in the past.");
       return;
     }
@@ -33,23 +36,20 @@ export default function PlanPauseDate() {
       return;
     }
 
-    setUser((prev) => {
-      const courses = prev.courses || [];
+    setSaving(true);
+    setError("");
+    try {
       if (scope === "course") {
-        return {
-          ...prev,
-          courses: courses.map((c) => (c.id === id ? { ...c, paused: true, pauseReturnDate: returnDate } : c)),
-        };
+        await pausePlan(user.token, id, returnDate);
+      } else {
+        await pauseEvent(user.token, id, returnDate);
       }
-      return {
-        ...prev,
-        courses: courses.map((c) => ({
-          ...c,
-          tasks: (c.tasks || []).map((t) => (t.id === id ? { ...t, paused: true, pauseReturnDate: returnDate } : t)),
-        })),
-      };
-    });
-    navigate(`/plan/pause/${scope}/${id}/confirm?date=${returnDate}`);
+      navigate(`/plan/pause/${scope}/${id}/confirm?date=${returnDate}`);
+    } catch (err) {
+      setError(err.message || "We couldn't pause this right now.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -78,8 +78,8 @@ export default function PlanPauseDate() {
             />
             {error && <div className="ss-field__error">{error}</div>}
           </div>
-          <button type="submit" className="ss-btn-primary">
-            {scope === "course" ? "Pause this course" : "Pause this activity"}
+          <button type="submit" className="ss-btn-primary" disabled={saving}>
+            {saving ? "Saving..." : scope === "course" ? "Pause this course" : "Pause this activity"}
           </button>
         </form>
       </div>

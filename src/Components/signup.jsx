@@ -8,8 +8,9 @@ export default function Signup({ onSubmit = () => {}, onNavigateLogin = () => {}
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errors, setErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     const next = {};
     if (!fullName.trim()) next.fullName = "Enter your full name.";
@@ -22,8 +23,15 @@ export default function Signup({ onSubmit = () => {}, onNavigateLogin = () => {}
       next.confirmPassword = "Passwords don't match.";
     }
     setErrors(next);
-    if (Object.keys(next).length === 0) {
-      onSubmit({ fullName, email, password });
+    if (Object.keys(next).length > 0) return;
+
+    setSubmitting(true);
+    try {
+      await onSubmit({ fullName, email, password });
+    } catch (err) {
+      setErrors({ form: err.message || "Something went wrong. Try again." });
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -34,6 +42,7 @@ export default function Signup({ onSubmit = () => {}, onNavigateLogin = () => {}
         <p className="ss-auth-card__sub">Let's get you set up in a few steps.</p>
 
         <form onSubmit={handleSubmit} noValidate>
+          {errors.form && <div className="ss-field__error" style={{ marginBottom: 16 }}>{errors.form}</div>}
           <div className={errors.fullName ? "ss-field ss-field--error" : "ss-field"}>
             <label htmlFor="signup-fullname">Your name</label>
             <input
@@ -84,8 +93,8 @@ export default function Signup({ onSubmit = () => {}, onNavigateLogin = () => {}
             autoComplete="new-password"
           />
 
-          <button type="submit" className="ss-btn-primary">
-            Create account
+          <button type="submit" className="ss-btn-primary" disabled={submitting}>
+            {submitting ? "Creating account..." : "Create account"}
           </button>
         </form>
 

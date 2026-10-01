@@ -1,4 +1,3 @@
-
 export const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 const DAY_PATTERNS = {
@@ -23,68 +22,40 @@ export function uid(prefix = "id") {
   return `${prefix}-${Date.now()}-${idCounter}`;
 }
 
-export function seedTasksForCourse(course) {
-  const dayList = daysPatternToList(course.days);
-  const titles = [
-    `Get started with ${course.title || "your course"}`,
-    "Complete the first module",
-    "Do the practice exercise",
-  ];
-  return titles.map((title, i) => ({
-    id: uid("task"),
-    title,
-    status: "pending",
-    scheduledDay: dayList[i % dayList.length],
-    estimatedMinutes: 30,
-  }));
+function reminderTimeToLabel(time) {
+  if (!time) return "Evening";
+  if (["Morning", "Afternoon", "Evening"].includes(time)) return time;
+  const hour = Number(String(time).split(":")[0]);
+  if (Number.isNaN(hour)) return "Evening";
+  if (hour < 12) return "Morning";
+  if (hour < 17) return "Afternoon";
+  return "Evening";
 }
 
-export function getAllTasksFlat(courses) {
-  return (courses || []).flatMap((course) =>
-    (course.tasks || []).map((task) => ({ ...task, courseId: course.id, courseTitle: course.title }))
-  );
-}
-
-export function findTask(courses, taskId) {
-  for (const course of courses || []) {
-    const task = (course.tasks || []).find((t) => t.id === taskId);
-    if (task) return { task, course };
+function reminderDaysToMap(days) {
+  if (days && !Array.isArray(days) && typeof days === "object") {
+    return WEEKDAYS.reduce((result, day) => ({ ...result, [day]: Boolean(days[day]) }), {});
   }
-  return null;
+  return WEEKDAYS.reduce((result, day) => ({ ...result, [day]: Array.isArray(days) && days.includes(day) }), {});
 }
 
-export function findCourse(courses, courseId) {
-  return (courses || []).find((c) => c.id === courseId) || null;
-}
-
-function localISODate() {
-  const d = new Date();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${d.getFullYear()}-${m}-${day}`;
-}
-
-function pausedNow(entity) {
-  if (!entity?.paused) return false;
-  if (entity.pauseReturnDate && entity.pauseReturnDate <= localISODate()) return false;
-  return true;
-}
-
-export function isPaused(course, task) {
-  return pausedNow(course) || pausedNow(task);
-}
-
-export function getWaitingTasks(courses) {
-  return (courses || []).flatMap((course) =>
-    (course.tasks || [])
-      .filter((t) => t.status !== "completed" && !isPaused(course, t))
-      .map((t) => ({ ...t, courseId: course.id, courseTitle: course.title }))
-  );
+export function normalizeReminder(reminder) {
+  if (!reminder) return null;
+  return {
+    enabled: Boolean(reminder.enabled),
+    days: reminderDaysToMap(reminder.days),
+    time: reminderTimeToLabel(reminder.time),
+  };
 }
 
 export function effectiveReminders(course, task, accountDefault) {
-  if (task?.reminderOverride) return task.reminderOverride;
-  if (course?.reminderOverride) return course.reminderOverride;
+  if (task?.reminderOverride !== null && task?.reminderOverride !== undefined) {
+    return normalizeReminder(task.reminderOverride);
+  }
+  if (course?.reminderOverride !== null && course?.reminderOverride !== undefined) {
+    return normalizeReminder(course.reminderOverride);
+  }
+  if (accountDefault?.enabled !== undefined) return normalizeReminder(accountDefault);
   if (accountDefault?.remindersEnabled !== undefined) {
     return {
       enabled: accountDefault.remindersEnabled,
@@ -95,10 +66,12 @@ export function effectiveReminders(course, task, accountDefault) {
   return { enabled: false, days: {}, time: "Evening" };
 }
 
-export function courseStats(course) {
-  const tasks = course.tasks || [];
-  const completed = tasks.filter((t) => t.status === "completed").length;
-  return { total: tasks.length, completed };
+export function reminderTimeToValue(time) {
+  return { Morning: "09:00", Afternoon: "14:00", Evening: "18:00" }[time] || "18:00";
+}
+
+export function reminderMapToList(days) {
+  return WEEKDAYS.filter((day) => days?.[day]);
 }
 
 export function splitByTimeBudget(tasks, minutesAvailable) {

@@ -5,15 +5,23 @@ export default function Login({ onSubmit = () => {}, onNavigateSignup = () => {}
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     const next = {};
     if (!email.trim()) next.email = "Enter your email.";
     if (!password) next.password = "Enter your password.";
     setErrors(next);
-    if (Object.keys(next).length === 0) {
-      onSubmit({ email, password });
+    if (Object.keys(next).length > 0) return;
+
+    setSubmitting(true);
+    try {
+      await onSubmit({ email, password });
+    } catch (err) {
+      setErrors({ form: err.message || "Something went wrong. Try again." });
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -24,6 +32,7 @@ export default function Login({ onSubmit = () => {}, onNavigateSignup = () => {}
         <p className="ss-auth-card__sub">Log in to your journey.</p>
 
         <form onSubmit={handleSubmit} noValidate>
+          {errors.form && <div className="ss-field__error" style={{ marginBottom: 16 }}>{errors.form}</div>}
           <div className={errors.email ? "ss-field ss-field--error" : "ss-field"}>
             <label htmlFor="login-email">Email</label>
             <input
@@ -53,8 +62,8 @@ export default function Login({ onSubmit = () => {}, onNavigateSignup = () => {}
             </a>
           </div>
 
-          <button type="submit" className="ss-btn-primary">
-            Log in
+          <button type="submit" className="ss-btn-primary" disabled={submitting}>
+            {submitting ? "Logging in..." : "Log in"}
           </button>
         </form>
 

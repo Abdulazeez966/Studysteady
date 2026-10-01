@@ -1,45 +1,135 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { useUser } from "../user-context";
-import { WEEKDAYS, findCourse, findTask, effectiveReminders } from "./course-utils";
+import { getAccountReminders, getEvent, getGoal, getPlan, updateEventReminders, updatePlanReminders } from "./api";
+import { WEEKDAYS, effectiveReminders, reminderMapToList, reminderTimeToValue } from "./course-utils";
 
 export default function PlanReminders() {
   const { scope, id } = useParams();
-  const { user, setUser } = useUser();
+  const { user } = useUser();
+  const token = user?.token;
   const navigate = useNavigate();
-  const courses = user?.courses || [];
-
-  const course = scope === "course" ? findCourse(courses, id) : findTask(courses, id)?.course;
-  const task = scope === "task" ? findTask(courses, id)?.task : null;
-  const current = effectiveReminders(course, task, user);
-
-  const [enabled, setEnabled] = useState(current.enabled);
-  const [reminderDays, setReminderDays] = useState(current.days || {});
-  const [reminderTime, setReminderTime] = useState(current.time || "Evening");
+  const [course, setCourse] = useState(null);
+  const [task, setTask] = useState(null);
+  const [account, setAccount] = useState(null);
+  const [goal, setGoal] = useState(null);
+  const [enabled, setEnabled] = useState(false);
+  const [reminderDays, setReminderDays] = useState({});
+  const [reminderTime, setReminderTime] = useState("Evening");
+  const [hasOverride, setHasOverride] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    async function load() {
+      if (!token) {
+        setLoading(false);
+        setError("Your session has expired. Please log in again.");
+        return;
+      }
+      setLoading(true);
+      setError("");
+      try {
+        const accountData = await getAccountReminders(token);
+        let planData;
+        let eventData = null;
+        let goalData = null;
+        if (scope === "course") {
+          planData = await getPlan(token, id);
+          const goalId = planData?.goal?._id || planData?.goal;
+          if (goalId) goalData = await getGoal(token, goalId);
+        } else if (scope === "task") {
+          eventData = await getEvent(token, id);
+          const planId = eventData?.plan?._id || eventData?.plan;
+          if (!planId) throw new Error("This activity is not linked to a plan.");
+          planData = await getPlan(token, planId);
+          const goalId = planData?.goal?._id || planData?.goal || eventData?.goal?._id || eventData?.goal;
+          if (goalId) goalData = await getGoal(token, goalId);
+        } else {
+          throw new Error("Unknown reminder scope.");
+        }
+        if (!active) return;
+        const current = effectiveReminders(planData, eventData, accountData);
+        setAccount(accountData);
+        setCourse(planData);
+        setTask(eventData);
+        setGoal(goalData);
+        setEnabled(current.enabled);
+        setReminderDays(current.days || {});
+        setReminderTime(current.time || "Evening");
+        setHasOverride(scope === "course" ? planData?.reminderOverride != null : eventData?.reminderOverride != null);
+      } catch (err) {
+        if (active) setError(err?.message || "We couldn't load these reminder settings.");
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+    load();
+    return () => { active = false; };
+  }, [token, scope, id]);
 
   function toggleDay(day) {
     setReminderDays((prev) => ({ ...prev, [day]: !prev[day] }));
     setSaved(false);
   }
 
-  function save() {
-    const override = { enabled, days: reminderDays, time: reminderTime };
-    setUser((prev) => {
-      const cs = prev.courses || [];
-      if (scope === "course") {
-        return { ...prev, courses: cs.map((c) => (c.id === id ? { ...c, reminderOverride: override } : c)) };
-      }
-      return {
-        ...prev,
-        courses: cs.map((c) => ({
-          ...c,
-          tasks: (c.tasks || []).map((t) => (t.id === id ? { ...t, reminderOverride: override } : t)),
-        })),
-      };
-    });
-    setSaved(true);
+  async function save() {
+    if (!token || saving) return;
+    setSaving(true);
+    setSaved(false);
+    setError("");
+    try {
+      const override = { enabled, days: enabled ? reminderMapToList(reminderDays) : [], time: enabled ? reminderTimeToValue(reminderTime) : null };
+      const data = scope === "course"
+        ? await updatePlanReminders(token, id, override)
+        : await updateEventReminders(token, id, override);
+      if (scope === "course") setCourse(data);
+      else setTask(data);
+      setHasOverride(true);
+      setSaved(true);
+    } catch (err) {
+      setError(err?.message || "We couldn't save these reminder settings.");
+    } finally {
+      setSaving(false);
+    }
   }
+
+  async function clearOverride() {
+    if (!token || saving) return;
+    setSaving(true);
+    setSaved(false);
+    setError("");
+    try {
+      const data = scope === "course"
+        ? await updatePlanReminders(token, id, null)
+        : await updateEventReminders(token, id, null);
+      if (scope === "course") setCourse(data);
+      else setTask(data);
+      const current = effectiveReminders(
+        scope === "course" ? data : course,
+        scope === "task" ? data : task,
+        account
+      );
+      setEnabled(current.enabled);
+      setReminderDays(current.days || {});
+      setReminderTime(current.time || "Evening");
+      setHasOverride(false);
+      setSaved(true);
+    } catch (err) {
+      setError(err?.message || "We couldn't clear this reminder override.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading) {
+    return <div className="ss-page"><div className="ss-page__inner"><p className="ss-empty-state">Loading reminder settings…</p></div></div>;
+  }
+
+  const title = scope === "course" ? (goal?.subject || "this course") : (task?.title || "this activity");
 
   return (
     <div className="ss-page">
@@ -51,12 +141,14 @@ export default function PlanReminders() {
           Plan
         </Link>
         <div className="ss-page-header">
-          <h1>Reminders for {scope === "course" ? course?.title : task?.title}</h1>
+          <h1>Reminders for {title}</h1>
           <p className="ss-page-header__sub">
             These settings apply only to {scope === "course" ? "this course" : "this activity"} — your account
             default in Settings is unaffected.
           </p>
         </div>
+
+        {error && <div className="ss-field__error ss-standalone-error">{error}</div>}
 
         <div className="ss-reminder-toggle-card">
           <div>
@@ -105,9 +197,14 @@ export default function PlanReminders() {
           ))}
         </div>
 
-        <button type="button" className="ss-btn-primary" onClick={save}>
-          Save preferences
+        <button type="button" className="ss-btn-primary" onClick={save} disabled={saving}>
+          {saving ? "Saving…" : "Save preferences"}
         </button>
+        {hasOverride && (
+          <button type="button" className="ss-btn-link" style={{ display: "block", textAlign: "center", marginTop: 14 }} onClick={clearOverride} disabled={saving}>
+            Use default reminders
+          </button>
+        )}
         {saved && <div className="ss-inline-saved ss-inline-saved--block">Saved.</div>}
         <button type="button" className="ss-btn-link" style={{ display: "block", textAlign: "center", marginTop: 14 }} onClick={() => navigate("/plan")}>
           Back to Plan

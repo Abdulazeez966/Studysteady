@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { uid, seedTasksForCourse } from "./course-utils";
+import { daysPatternToList, uid } from "./course-utils";
 
 export default function AddCourseForm({ onSave = () => {}, onCancel = null, submitLabel = "Add course" }) {
   const [title, setTitle] = useState("");
@@ -14,19 +14,21 @@ export default function AddCourseForm({ onSave = () => {}, onCancel = null, subm
       setError("Give this course a name.");
       return;
     }
-    const course = {
-      id: uid("course"),
+
+    const dayList = daysPatternToList(days);
+    const activities = [
+      { id: uid("activity"), title: `Get started with ${title.trim()}`, estimatedMinutes: 30 },
+      { id: uid("activity"), title: "Complete the first module", estimatedMinutes: 30 },
+      { id: uid("activity"), title: "Do the practice exercise", estimatedMinutes: 30 },
+    ];
+
+    onSave({
       title: title.trim(),
       provider: provider.trim(),
       weeklyTime,
-      days,
-      paused: false,
-      pauseReturnDate: null,
-      reminderOverride: null,
-      tasks: [],
-    };
-    course.tasks = seedTasksForCourse(course);
-    onSave(course);
+      days: dayList,
+      activities: activities.map(({ id, ...activity }) => activity),
+    });
   }
 
   return (
@@ -76,7 +78,7 @@ export default function AddCourseForm({ onSave = () => {}, onCancel = null, subm
             Cancel
           </button>
         )}
-        <button type="submit" className="ss-btn-primary">
+        <button type="submit" className="ss-btn-primary" disabled={false}>
           {submitLabel}
         </button>
       </div>
