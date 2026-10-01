@@ -8,7 +8,6 @@ import {
   getEvent,
   getGoals,
   resumeEvent,
-  resetActivity,
   startActivity,
   updateEvent,
 } from "./api";
@@ -100,21 +99,7 @@ export default function TaskView() {
     if (!token || !event || saving) return;
     if (nextStatus === status) return;
     if (status === "completed") {
-      if (!activity) {
-        setError("This completed task has no activity record to reset.");
-        return;
-      }
-      setSaving(true);
-      setError("");
-      setNotice("");
-      try {
-        await resetActivity(token, activityId(activity));
-        await loadTask();
-      } catch (err) {
-        setError(err?.message || "We couldn't reset this task.");
-      } finally {
-        setSaving(false);
-      }
+      setNotice("Completed activities cannot be moved back to an earlier status because the backend has no reset endpoint.");
       return;
     }
 
@@ -253,7 +238,7 @@ export default function TaskView() {
               type="button"
               className={status === item ? "ss-segmented__opt--on" : ""}
               onClick={() => setStatus(item)}
-              disabled={saving}
+              disabled={saving || status === "completed"}
             >
               {STATUS_LABELS[item]}
             </button>

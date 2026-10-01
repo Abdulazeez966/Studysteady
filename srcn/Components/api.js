@@ -1,4 +1,4 @@
-const BASE_URL = (import.meta.env.VITE_API_URL || "https://study-steady-backend.onrender.com/api").replace(/\/+$/, "");
+const BASE_URL = (import.meta.env.VITE_API_URL || "https://studysteady.onrender.com/api").replace(/\/+$/, "");
 
 async function request(path, { method = "GET", body, token } = {}) {
   const res = await fetch(`${BASE_URL}${path}`, {
@@ -29,14 +29,6 @@ export function registerUser({ name, email, password }) {
 
 export function loginUser({ email, password }) {
   return request("/auth/login", { method: "POST", body: { email, password } });
-}
-
-export function updateAccount(token, { name, email, currentPassword, newPassword }) {
-  return request("/auth/account", {
-    method: "PUT",
-    body: { name, email, currentPassword, newPassword },
-    token,
-  });
 }
 
 export function createGoal(token, { subject, description, provider, targetDate }) {
@@ -135,10 +127,6 @@ export function updateEvent(token, eventId, { scheduledDate, scheduledTime, esti
   });
 }
 
-export function deleteEvent(token, eventId) {
-  return request(`/events/${eventId}`, { method: "DELETE", token });
-}
-
 export function pauseEvent(token, eventId, returnDate) {
   return request(`/events/${eventId}/pause`, { method: "PUT", body: { returnDate }, token });
 }
@@ -154,10 +142,6 @@ export function updateEventReminders(token, eventId, override) {
 
 export function startActivity(token, eventId) {
   return request("/activities/start", { method: "POST", body: { eventId }, token });
-}
-
-export function resetActivity(token, activityId) {
-  return request(`/activities/${activityId}/reset`, { method: "PUT", token });
 }
 
 export function completeActivity(token, activityId) {
