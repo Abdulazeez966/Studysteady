@@ -83,7 +83,7 @@ export default function Onboarding({ onSubmit = () => {} }) {
       }
 
       if (startNow) {
-        const reminderTimeValue = { Morning: "09:00", Afternoon: "14:00", Evening: "18:00" }[reminderTime];
+        const reminderTimeValue = { Morning: "08:00", Afternoon: "14:00", Evening: "18:00" }[reminderTime];
         const reminderDaysList = WEEKDAYS.filter((day) => reminderDays[day]);
         await updateAccountReminders(user.token, {
           enabled: remindersEnabled,

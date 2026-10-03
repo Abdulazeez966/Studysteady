@@ -94,7 +94,7 @@ export default function Reminders() {
         <div className="ss-reminder-toggle-card">
           <div>
             <h3>Enable reminders</h3>
-            <p>Get notified before your sessions</p>
+            <p>Get email and in-app reminders for your tasks</p>
           </div>
           <button
             type="button"
@@ -139,7 +139,7 @@ export default function Reminders() {
           ))}
         </div>
 
-        <p className="ss-reminders-note">Reminders help, but you're in control. Adjust these any time.</p>
+        <p className="ss-reminders-note">Morning reminders are sent at 8:00 AM, afternoon at 2:00 PM, and evening at 6:00 PM in your local time. If you are already using the app from 5:30–8:00 AM, 11:00 AM–2:00 PM, or 3:30–6:00 PM, the upcoming task can appear in-app early.</p>
 
         <button type="button" className="ss-btn-primary" onClick={save} disabled={saving}>
           {saving ? "Saving…" : "Save preferences"}

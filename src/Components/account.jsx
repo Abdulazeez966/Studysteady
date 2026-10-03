@@ -1,66 +1,45 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useUser } from "../user-context";
-import { updateAccount } from "./api";
+import { deleteAccount } from "./api";
 
 export default function Account() {
   const { user, setUser } = useUser();
   const navigate = useNavigate();
-  const initial = user?.name ? user.name.charAt(0).toUpperCase() : "?";
-  const [name, setName] = useState(user?.name || "");
-  const [email, setEmail] = useState(user?.email || "");
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
+  const [showDelete, setShowDelete] = useState(false);
+  const [password, setPassword] = useState("");
+  const [confirmation, setConfirmation] = useState("");
   const [error, setError] = useState("");
-
-  async function saveAccount(event) {
-    event.preventDefault();
-    if (!user?.token || saving) return;
-    setMessage("");
-    setError("");
-
-    const passwordIsChanging = Boolean(newPassword || currentPassword || confirmPassword);
-    if (passwordIsChanging) {
-      if (!currentPassword) {
-        setError("Enter your current password to change your password.");
-        return;
-      }
-      if (newPassword.length < 8) {
-        setError("Your new password must be at least 8 characters.");
-        return;
-      }
-      if (newPassword !== confirmPassword) {
-        setError("The new passwords do not match.");
-        return;
-      }
-    }
-
-    setSaving(true);
-    try {
-      const updated = await updateAccount(user.token, {
-        name: name.trim(),
-        email: email.trim(),
-        currentPassword: passwordIsChanging ? currentPassword : undefined,
-        newPassword: passwordIsChanging ? newPassword : undefined,
-      });
-      setUser({ ...user, ...updated });
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-      setMessage("Account details saved.");
-    } catch (err) {
-      setError(err?.message || "We couldn't update your account.");
-    } finally {
-      setSaving(false);
-    }
-  }
+  const [isDeleting, setIsDeleting] = useState(false);
+  const initial = user?.name ? user.name.charAt(0).toUpperCase() : "?";
 
   function logOut() {
     setUser(null);
     navigate("/");
+  }
+
+  async function handleDelete(event) {
+    event.preventDefault();
+    setError("");
+
+    if (confirmation !== "DELETE") {
+      setError('Type DELETE to confirm account deletion.');
+      return;
+    }
+    if (!password) {
+      setError('Enter your password to continue.');
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await deleteAccount(user.token, password);
+      setUser(null);
+      navigate("/");
+    } catch (err) {
+      setError(err.message || "Unable to delete your account.");
+      setIsDeleting(false);
+    }
   }
 
   return (
@@ -76,44 +55,62 @@ export default function Account() {
           <h1>Account</h1>
         </div>
 
-        <form className="ss-card" onSubmit={saveAccount}>
+        <div className="ss-card ss-card--center">
           <div className="ss-account-page-avatar">{initial}</div>
-          <label className="ss-form-field">
-            <span>Name</span>
-            <input value={name} onChange={(e) => setName(e.target.value)} required />
-          </label>
-          <label className="ss-form-field">
-            <span>Email</span>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          </label>
-
-          <div className="ss-form-section">
-            <h2>Change password</h2>
-            <p>Leave these fields blank if you don't want to change your password.</p>
-            <label className="ss-form-field">
-              <span>Current password</span>
-              <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} autoComplete="current-password" />
-            </label>
-            <label className="ss-form-field">
-              <span>New password</span>
-              <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} autoComplete="new-password" minLength={8} />
-            </label>
-            <label className="ss-form-field">
-              <span>Confirm new password</span>
-              <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} autoComplete="new-password" minLength={8} />
-            </label>
-          </div>
-
-          {error && <p className="ss-error">{error}</p>}
-          {message && <p className="ss-success">{message}</p>}
-
-          <button type="submit" className="ss-btn-primary" disabled={saving}>
-            {saving ? "Saving…" : "Save changes"}
-          </button>
+          <p className="ss-account-page-name">{user?.name || "—"}</p>
+          <p className="ss-account-page-email">{user?.email || "—"}</p>
           <button type="button" className="ss-logout-btn" onClick={logOut}>
             Log out
           </button>
-        </form>
+        </div>
+
+        <div className="ss-card ss-danger-card">
+          <h2 className="ss-danger-card__title">Delete account</h2>
+          <p className="ss-danger-card__text">
+            Permanently delete your StudySteady account and your saved goals, plans, events, activities, and reminder settings. This cannot be undone.
+          </p>
+
+          {!showDelete ? (
+            <button type="button" className="ss-delete-account-btn" onClick={() => { setShowDelete(true); setError(""); }}>
+              Delete my account
+            </button>
+          ) : (
+            <form onSubmit={handleDelete} className="ss-delete-account-form">
+              <label className="ss-form-label" htmlFor="delete-password">Password</label>
+              <input
+                id="delete-password"
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                autoComplete="current-password"
+                placeholder="Enter your password"
+                disabled={isDeleting}
+              />
+
+              <label className="ss-form-label" htmlFor="delete-confirmation">Type DELETE to confirm</label>
+              <input
+                id="delete-confirmation"
+                type="text"
+                value={confirmation}
+                onChange={(event) => setConfirmation(event.target.value)}
+                autoComplete="off"
+                placeholder="DELETE"
+                disabled={isDeleting}
+              />
+
+              {error ? <p className="ss-form-error" role="alert">{error}</p> : null}
+
+              <div className="ss-delete-account-actions">
+                <button type="button" className="ss-secondary-btn" onClick={() => { setShowDelete(false); setPassword(""); setConfirmation(""); setError(""); }} disabled={isDeleting}>
+                  Cancel
+                </button>
+                <button type="submit" className="ss-delete-account-btn" disabled={isDeleting}>
+                  {isDeleting ? "Deleting…" : "Permanently delete"}
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
       </div>
     </div>
   );

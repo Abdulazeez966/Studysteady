@@ -5,13 +5,10 @@ import {
   adjustPlanSchedule,
   completeActivity,
   createCourse,
-  deleteEvent,
-  deletePlan,
   getActivities,
   getEvents,
   getGoals,
   getPlans,
-  resetActivity,
   startActivity,
   updateEvent,
 } from "./api";
@@ -92,7 +89,6 @@ export default function Plan() {
   const [newTaskByPlan, setNewTaskByPlan] = useState({});
   const [newTaskMinutesByPlan, setNewTaskMinutesByPlan] = useState({});
   const [notice, setNotice] = useState("");
-  const [deletingPlanId, setDeletingPlanId] = useState(null);
 
   async function loadPlans() {
     if (!token) {
@@ -164,18 +160,7 @@ export default function Plan() {
     const current = statusForEvent(event, row.activitiesByEvent);
 
     if (current === "completed") {
-      setSaving(true);
-      setNotice("");
-      try {
-        const activity = row.activitiesByEvent.get(String(id));
-        if (!activity) throw new Error("This completed event has no activity record to reset.");
-        await resetActivity(token, activityId(activity));
-        await loadPlans();
-      } catch (err) {
-        setLocalError(err?.message || "We couldn't reset that activity.");
-      } finally {
-        setSaving(false);
-      }
+      setNotice("Completed activities cannot be moved back to pending because the backend has no activity reset endpoint.");
       return;
     }
 
@@ -195,44 +180,6 @@ export default function Plan() {
     } catch (err) {
       setLocalError(err?.message || "We couldn't update that activity.");
     } finally {
-      setSaving(false);
-    }
-  }
-
-  async function removeEvent(event) {
-    if (!token || saving) return;
-    const id = eventId(event);
-    setSaving(true);
-    setNotice("");
-    setLocalError("");
-    try {
-      await deleteEvent(token, id);
-      await loadPlans();
-    } catch (err) {
-      setLocalError(err?.message || "We couldn't remove that task.");
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function deleteCourse(row) {
-    if (!token || saving) return;
-    const planId = String(row.plan._id || row.plan.id);
-    const courseName = row.goal?.subject || "this course";
-    const confirmed = window.confirm(`Delete ${courseName}? This removes the course itself. This action cannot be undone.`);
-    if (!confirmed) return;
-
-    setSaving(true);
-    setDeletingPlanId(planId);
-    setLocalError("");
-    setNotice("");
-    try {
-      await deletePlan(token, planId);
-      await loadPlans();
-    } catch (err) {
-      setLocalError(err?.message || "We couldn't delete that course.");
-    } finally {
-      setDeletingPlanId(null);
       setSaving(false);
     }
   }
@@ -262,6 +209,9 @@ export default function Plan() {
         scheduledDate: event.scheduledDate,
         scheduledTime: event.scheduledTime,
       });
+      if (updated?.title !== title) {
+        setNotice("The backend accepted the event update but did not update its title. Title editing needs a backend Event title field in the update operation.");
+      }
       await loadPlans();
     } catch (err) {
       setLocalError(err?.message || "We couldn't update that task.");
@@ -339,6 +289,7 @@ export default function Plan() {
       });
       setNewTaskByPlan((prev) => ({ ...prev, [planId]: "" }));
       setNewTaskMinutesByPlan((prev) => ({ ...prev, [planId]: "" }));
+      setNotice("The plan template was updated. This backend currently does not generate Event documents when /plans/:id/adjust is called, so the new activity will not appear as a scheduled task until the schedule-generation behavior is extended.");
       await loadPlans();
     } catch (err) {
       setLocalError(err?.message || "We couldn't add that activity.");
@@ -475,7 +426,7 @@ export default function Plan() {
                             <button
                               type="button"
                               className="ss-plan-item__remove"
-                              onClick={() => removeEvent(event)}
+                              onClick={() => setNotice("The backend has no endpoint for deleting a single Event. The task has not been removed or faked as removed. Use Pause / Adjust for the closest supported control.")}
                               aria-label={`Remove ${event.title}`}
                             >
                               ×
@@ -517,14 +468,6 @@ export default function Plan() {
                   <Link to={`/plan/reminders/course/${planId}`} className="ss-btn-secondary">
                     Reminders
                   </Link>
-                  <button
-                    type="button"
-                    className="ss-btn-secondary ss-btn-danger"
-                    onClick={() => deleteCourse(row)}
-                    disabled={saving}
-                  >
-                    {deletingPlanId === planId ? "Deleting…" : "Delete Course"}
-                  </button>
                 </div>
               </div>
             );

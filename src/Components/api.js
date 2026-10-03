@@ -31,12 +31,8 @@ export function loginUser({ email, password }) {
   return request("/auth/login", { method: "POST", body: { email, password } });
 }
 
-export function updateAccount(token, { name, email, currentPassword, newPassword }) {
-  return request("/auth/account", {
-    method: "PUT",
-    body: { name, email, currentPassword, newPassword },
-    token,
-  });
+export function deleteAccount(token, password) {
+  return request("/auth/account", { method: "DELETE", body: { password }, token });
 }
 
 export function createGoal(token, { subject, description, provider, targetDate }) {
@@ -135,10 +131,6 @@ export function updateEvent(token, eventId, { scheduledDate, scheduledTime, esti
   });
 }
 
-export function deleteEvent(token, eventId) {
-  return request(`/events/${eventId}`, { method: "DELETE", token });
-}
-
 export function pauseEvent(token, eventId, returnDate) {
   return request(`/events/${eventId}/pause`, { method: "PUT", body: { returnDate }, token });
 }
@@ -154,10 +146,6 @@ export function updateEventReminders(token, eventId, override) {
 
 export function startActivity(token, eventId) {
   return request("/activities/start", { method: "POST", body: { eventId }, token });
-}
-
-export function resetActivity(token, activityId) {
-  return request(`/activities/${activityId}/reset`, { method: "PUT", token });
 }
 
 export function completeActivity(token, activityId) {
@@ -203,4 +191,21 @@ export function snoozeRecovery(token, activityId) {
 
 export function recoverActivity(token, activityId) {
   return request(`/recovery/${activityId}/recover`, { method: "PUT", token });
+}
+
+
+export function updatePresence(token, timezone) {
+  return request("/auth/presence", { method: "POST", body: { timezone }, token });
+}
+
+export function getNotifications(token) {
+  return request("/notifications", { token });
+}
+
+export function markNotificationRead(token, notificationId) {
+  return request(`/notifications/${notificationId}/read`, { method: "PUT", token });
+}
+
+export function markAllNotificationsRead(token) {
+  return request("/notifications/read-all", { method: "PUT", token });
 }

@@ -1312,56 +1312,207 @@
 }
 
 
-.ss-form-field {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  margin: 0 0 14px;
+
+.ss-danger-card {
+  margin-top: 24px;
+  border: 1px solid #e4b4b4;
 }
 
-.ss-form-field > span {
-  font-size: 13px;
+.ss-danger-card__title {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.ss-danger-card__text {
+  margin: 0 0 18px;
+  line-height: 1.5;
+}
+
+.ss-delete-account-btn {
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font: inherit;
+  cursor: pointer;
+  background: #b42318;
+  color: #fff;
+}
+
+.ss-delete-account-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.ss-delete-account-form {
+  display: grid;
+  gap: 10px;
+}
+
+.ss-form-label {
   font-weight: 600;
-  color: var(--ss-ink);
 }
 
-.ss-form-field input {
+.ss-delete-account-form input {
   width: 100%;
   box-sizing: border-box;
-  padding: 11px 12px;
-  border: 1.5px solid var(--ss-border);
-  border-radius: 10px;
-  background: var(--ss-white);
-  color: var(--ss-ink);
+  padding: 10px 12px;
+  border: 1px solid #c9c9c9;
+  border-radius: 8px;
   font: inherit;
 }
 
-.ss-form-section {
-  margin-top: 22px;
-  padding-top: 18px;
-  border-top: 1px solid var(--ss-border);
+.ss-form-error {
+  margin: 2px 0;
+  line-height: 1.4;
 }
 
-.ss-form-section h2 {
-  margin: 0 0 4px;
-  font-size: 17px;
+.ss-delete-account-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
 }
 
-.ss-form-section p {
-  margin: 0 0 14px;
-  font-size: 13px;
+.ss-secondary-btn {
+  border: 1px solid #c9c9c9;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font: inherit;
+  cursor: pointer;
+  background: transparent;
+}
+
+.ss-notification-center {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  z-index: 1000;
+}
+
+.ss-notification-bell {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--ss-border);
+  border-radius: 50%;
+  background: var(--ss-white);
+  color: var(--ss-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(0,0,0,.08);
+}
+
+.ss-notification-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 10px;
+  background: var(--ss-teal);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ss-notification-panel {
+  position: absolute;
+  top: 52px;
+  right: 0;
+  width: min(360px, calc(100vw - 28px));
+  max-height: 70vh;
+  overflow: auto;
+  background: var(--ss-white);
+  border: 1px solid var(--ss-border);
+  border-radius: 14px;
+  box-shadow: 0 18px 45px rgba(0,0,0,.14);
+}
+
+.ss-notification-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--ss-border);
+}
+
+.ss-notification-panel__header strong,
+.ss-notification-panel__header span {
+  display: block;
+}
+
+.ss-notification-panel__header span {
+  margin-top: 3px;
   color: var(--ss-stone);
+  font-size: 12px;
 }
 
-.ss-error,
-.ss-success {
-  margin: 10px 0;
+.ss-notification-panel__read-all {
+  border: 0;
+  background: transparent;
+  color: var(--ss-teal);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.ss-notification-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--ss-border);
+}
+
+.ss-notification-item--unread {
+  background: rgba(0, 128, 128, .06);
+}
+
+.ss-notification-item__body {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
+}
+
+.ss-notification-item__title,
+.ss-notification-item__message,
+.ss-notification-item__meta {
+  display: block;
+}
+
+.ss-notification-item__title {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.ss-notification-item__message {
   font-size: 13px;
+  line-height: 1.45;
 }
 
-.ss-error { color: #a33a3a; }
-.ss-success { color: #2e7046; }
+.ss-notification-item__meta {
+  margin-top: 5px;
+  color: var(--ss-stone);
+  font-size: 11px;
+}
 
-.ss-btn-danger {
-  border-color: #d7a0a0;
+.ss-notification-item__link {
+  display: inline-block;
+  margin-top: 8px;
+  color: var(--ss-teal);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ss-notification-empty {
+  margin: 0;
+  padding: 22px 16px;
+  color: var(--ss-stone);
+  font-size: 13px;
 }

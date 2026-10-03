@@ -67,7 +67,7 @@ export function effectiveReminders(course, task, accountDefault) {
 }
 
 export function reminderTimeToValue(time) {
-  return { Morning: "09:00", Afternoon: "14:00", Evening: "18:00" }[time] || "18:00";
+  return { Morning: "08:00", Afternoon: "14:00", Evening: "18:00" }[time] || "18:00";
 }
 
 export function reminderMapToList(days) {
